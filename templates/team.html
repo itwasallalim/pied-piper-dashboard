@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pied Piper — Team</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0b0e14;--card:#131720;--card-border:#1e2433;--accent:#22d3ee;--text:#e2e8f0;--text-dim:#64748b;--text-bright:#f8fafc}
+body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+a{color:var(--accent);text-decoration:none}
+nav{background:var(--card);border-bottom:1px solid var(--card-border);padding:0 32px;display:flex;align-items:center}
+nav a{padding:14px 20px;font-weight:600;color:var(--text-dim);font-size:14px;border-bottom:2px solid transparent}
+nav a.active{color:var(--accent);font-weight:700;border-bottom-color:var(--accent)}
+nav .spacer{flex:1}
+nav .logout{color:#f85149;font-size:12px}
+.container{max-width:1200px;margin:0 auto;padding:32px}
+h1{font-size:24px;font-weight:700;color:var(--text-bright);margin-bottom:24px}
+.team-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:20px}
+.member{background:var(--card);border:1px solid var(--card-border);border-radius:12px;padding:24px;transition:border-color .2s}
+.member:hover{border-color:var(--accent)}
+.member-header{display:flex;align-items:center;gap:16px;margin-bottom:16px}
+.member-header img{width:64px;height:64px;border-radius:50%;background:#1e2433}
+.member-header .info h2{font-size:18px;font-weight:700;color:var(--text-bright)}
+.member-header .info .role{font-size:12px;padding:3px 10px;border-radius:20px;font-weight:600;display:inline-block;margin-top:4px}
+.bio{font-size:13px;line-height:1.6;color:var(--text);margin-bottom:16px}
+.stats-row{display:flex;gap:12px;flex-wrap:wrap}
+.stat{background:#0b0e14;border-radius:8px;padding:8px 14px;font-size:12px}
+.stat .label{color:var(--text-dim);margin-bottom:2px}
+.stat .val{font-weight:700;color:var(--text-bright);font-variant-numeric:tabular-nums}
+</style>
+</head>
+<body>
+<nav>
+  <a href="/">Dashboard</a>
+  <a href="/team" class="active">Team</a>
+  <a href="/sprint">Sprint Board</a>
+  <div class="spacer"></div>
+  <a href="/logout" class="logout">Logout</a>
+</nav>
+<div class="container">
+<h1>👥 The Team</h1>
+<div class="team-grid" id="grid"></div>
+</div>
+<script>
+const TEAM=[
+  {key:'richard',name:'Richard Hendricks',role:'CEO & Lead Architect',color:'#22d3ee',bio:'Nervous genius. Built the middle-out compression algorithm. Overthinks everything but usually right.'},
+  {key:'erlich',name:'Erlich Bachman',role:'Business Development',color:'#a78bfa',bio:'Self-proclaimed visionary. Founded Aviato. Owns 10% and never lets you forget it. Lives large.'},
+  {key:'dinesh',name:'Dinesh Chugtai',role:'Full-Stack Engineer',color:'#f472b6',bio:'Frontend specialist. Competitive with Gilfoyle. Desperate for validation. Actually a solid coder.'},
+  {key:'gilfoyle',name:'Gilfoyle',role:'Systems & Security',color:'#34d399',bio:'Satanist. Deadpan. Thinks Dinesh is an idiot. Quietly the most competent person in the room.'},
+  {key:'jiangyang',name:'Jian-Yang',role:'Wildcard',color:'#fb923c',bio:'Says very little. When he speaks, it\'s devastating. May or may not be working on his own thing.'}
+];
+function fmt(n){return n>=1e6?(n/1e6).toFixed(1)+'M':n>=1e3?(n/1e3).toFixed(1)+'K':n.toString()}
+function fmtCost(n){return '$'+n.toFixed(4)}
+async function load(){
+  const res=await fetch('/api/stats');const data=await res.json();
+  const statsMap={};data.agents.forEach(a=>statsMap[a.agent]=a);
+  document.getElementById('grid').innerHTML=TEAM.map(m=>{
+    const s=statsMap[m.key]||{};
+    return `<div class="member">
+      <div class="member-header">
+        <img src="https://api.dicebear.com/7.x/bottts/svg?seed=${m.key}" alt="${m.name}">
+        <div class="info"><h2>${m.name}</h2><span class="role" style="background:${m.color}22;color:${m.color}">${m.role}</span></div>
+      </div>
+      <div class="bio">${m.bio}</div>
+      <div class="stats-row">
+        <div class="stat"><div class="label">Messages</div><div class="val">${fmt(s.totalMessages||0)}</div></div>
+        <div class="stat"><div class="label">Tokens</div><div class="val">${fmt(s.totalTokens||0)}</div></div>
+        <div class="stat"><div class="label">Cost</div><div class="val" style="color:var(--accent)">${fmtCost(s.totalCost||0)}</div></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+load();
+</script>
+</body>
+</html>

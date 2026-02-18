@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pied Piper — Agent Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<style>
+  :root { --bg: #0f1117; --card: #1a1d28; --border: #2a2d3a; --text: #e1e4ed; --dim: #8b8fa3; --accent: #6366f1; --green: #22c55e; --yellow: #eab308; --red: #ef4444; --cyan: #06b6d4; --pink: #ec4899; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; padding: 24px; }
+  h1 { font-size: 1.6rem; margin-bottom: 4px; }
+  .subtitle { color: var(--dim); font-size: 0.85rem; margin-bottom: 24px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+  .card h3 { font-size: 0.8rem; color: var(--dim); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; }
+  .card .value { font-size: 1.8rem; font-weight: 700; }
+  .agent-color { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+  .charts { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+  .chart-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+  .chart-card h3 { margin-bottom: 12px; font-size: 0.95rem; }
+  canvas { max-height: 300px; }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { padding: 10px 14px; text-align: left; border-bottom: 1px solid var(--border); font-size: 0.85rem; }
+  th { color: var(--dim); font-weight: 600; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; }
+  .activity { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 24px; }
+  .activity h3 { margin-bottom: 12px; font-size: 0.95rem; }
+  .feed-item { padding: 10px 0; border-bottom: 1px solid var(--border); display: flex; gap: 12px; align-items: flex-start; }
+  .feed-item:last-child { border-bottom: none; }
+  .feed-agent { font-weight: 600; font-size: 0.8rem; min-width: 80px; text-transform: capitalize; }
+  .feed-text { color: var(--dim); font-size: 0.83rem; flex: 1; }
+  .feed-time { color: var(--dim); font-size: 0.75rem; min-width: 140px; text-align: right; }
+  .status-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+  .refresh-badge { background: var(--border); color: var(--dim); padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; }
+  @media (max-width: 800px) { .charts { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="status-bar">
+  <div><h1>🔥 Pied Piper Agent Dashboard</h1><div class="subtitle">Real-time monitoring of the AI agent team</div></div>
+  <div class="refresh-badge" id="refresh">Loading...</div>
+</div>
+
+<div class="grid" id="summary-cards"></div>
+
+<div class="charts">
+  <div class="chart-card"><h3>Token Usage by Agent</h3><canvas id="tokenChart"></canvas></div>
+  <div class="chart-card"><h3>Cost Breakdown</h3><canvas id="costChart"></canvas></div>
+</div>
+
+<div class="chart-card" style="margin-bottom:24px"><h3>Agent Comparison</h3>
+  <table id="agent-table"><thead><tr><th>Agent</th><th>Messages</th><th>Total Tokens</th><th>Input</th><th>Output</th><th>Cache Read</th><th>Cache Write</th><th>Total Cost</th></tr></thead><tbody></tbody></table>
+</div>
+
+<div class="activity"><h3>Recent Activity</h3><div id="feed"></div></div>
+
+<script>
+const COLORS = ['#6366f1','#22c55e','#eab308','#ef4444','#06b6d4'];
+let tokenChart, costChart;
+
+function fmt(n) { return n >= 1e6 ? (n/1e6).toFixed(1)+'M' : n >= 1e3 ? (n/1e3).toFixed(1)+'K' : String(n); }
+function fmtCost(n) { return '$' + n.toFixed(4); }
+
+function timeAgo(ts) {
+  if (!ts) return '';
+  const d = new Date(ts);
+  return d.toLocaleString('en-US', { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
+}
+
+async function load() {
+  const res = await fetch('/api/dashboard');
+  const data = await res.json();
+  
+  const totTokens = data.reduce((s,a) => s + a.totalTokens, 0);
+  const totCost = data.reduce((s,a) => s + a.totalCost, 0);
+  const totMsgs = data.reduce((s,a) => s + a.totalMessages, 0);
+
+  document.getElementById('summary-cards').innerHTML = `
+    <div class="card"><h3>Total Messages</h3><div class="value">${fmt(totMsgs)}</div></div>
+    <div class="card"><h3>Total Tokens</h3><div class="value">${fmt(totTokens)}</div></div>
+    <div class="card"><h3>Total Cost</h3><div class="value">${fmtCost(totCost)}</div></div>
+    <div class="card"><h3>Active Agents</h3><div class="value">${data.length}</div></div>
+  `;
+
+  // Token bar chart
+  const tokenCtx = document.getElementById('tokenChart').getContext('2d');
+  if (tokenChart) tokenChart.destroy();
+  tokenChart = new Chart(tokenCtx, {
+    type: 'bar',
+    data: {
+      labels: data.map(a => a.agent),
+      datasets: [
+        { label: 'Input', data: data.map(a => a.inputTokens), backgroundColor: '#6366f1' },
+        { label: 'Output', data: data.map(a => a.outputTokens), backgroundColor: '#22c55e' },
+        { label: 'Cache Read', data: data.map(a => a.cacheReadTokens), backgroundColor: '#eab308' },
+        { label: 'Cache Write', data: data.map(a => a.cacheWriteTokens), backgroundColor: '#06b6d4' },
+      ]
+    },
+    options: { responsive: true, plugins: { legend: { labels: { color: '#8b8fa3' } } }, scales: { x: { stacked: true, ticks: { color: '#8b8fa3' } }, y: { stacked: true, ticks: { color: '#8b8fa3' } } } }
+  });
+
+  // Cost pie chart
+  const costCtx = document.getElementById('costChart').getContext('2d');
+  if (costChart) costChart.destroy();
+  costChart = new Chart(costCtx, {
+    type: 'doughnut',
+    data: {
+      labels: data.map(a => a.agent),
+      datasets: [{ data: data.map(a => a.totalCost), backgroundColor: COLORS }]
+    },
+    options: { responsive: true, plugins: { legend: { position: 'right', labels: { color: '#8b8fa3' } } } }
+  });
+
+  // Table
+  const tbody = document.querySelector('#agent-table tbody');
+  tbody.innerHTML = data.map((a,i) => `<tr>
+    <td><span class="agent-color" style="background:${COLORS[i]}"></span>${a.agent}</td>
+    <td>${a.totalMessages}</td><td>${fmt(a.totalTokens)}</td>
+    <td>${fmt(a.inputTokens)}</td><td>${fmt(a.outputTokens)}</td>
+    <td>${fmt(a.cacheReadTokens)}</td><td>${fmt(a.cacheWriteTokens)}</td>
+    <td>${fmtCost(a.totalCost)}</td>
+  </tr>`).join('');
+
+  // Activity feed
+  const allMsgs = data.flatMap(a => a.recentMessages.map(m => ({...m, agent: a.agent})));
+  allMsgs.sort((a,b) => (b.timestamp||'').localeCompare(a.timestamp||''));
+  document.getElementById('feed').innerHTML = allMsgs.slice(0, 20).map(m => `
+    <div class="feed-item">
+      <div class="feed-agent">${m.agent}</div>
+      <div class="feed-text">${m.text}</div>
+      <div class="feed-time">${timeAgo(m.timestamp)}</div>
+    </div>
+  `).join('');
+
+  document.getElementById('refresh').textContent = 'Updated ' + new Date().toLocaleTimeString();
+}
+
+load();
+setInterval(load, 30000);
+</script>
+</body>
+</html>

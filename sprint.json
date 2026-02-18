@@ -1,0 +1,13 @@
+{
+  "tasks": [
+    {"id": 1, "title": "Install Gmail skill from ClawHub", "assignee": "Gilfoyle", "column": "backlog"},
+    {"id": 2, "title": "Install Dropbox skill from ClawHub", "assignee": "Gilfoyle", "column": "backlog"},
+    {"id": 3, "title": "Set up CI/CD pipeline", "assignee": "Richard", "column": "backlog"},
+    {"id": 4, "title": "Dashboard auth & deployment", "assignee": "Gilfoyle", "column": "in-progress"},
+    {"id": 5, "title": "Competitive analysis report", "assignee": "Erlich", "column": "in-progress"},
+    {"id": 6, "title": "Dashboard v2 — live data", "assignee": "Gilfoyle", "column": "review"},
+    {"id": 7, "title": "Install GitHub skill", "assignee": "Gilfoyle", "column": "done"},
+    {"id": 8, "title": "Dashboard v1 — static", "assignee": "Gilfoyle", "column": "done"}
+  ],
+  "next_id": 9
+}

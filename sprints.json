@@ -1,0 +1,9 @@
+[
+  {"id": 1, "title": "Implement middle-out compression v2", "description": "Refactor the core algorithm for better Weissman scores", "assignee": "richard", "status": "in-progress", "created": "2026-02-17T10:00:00Z"},
+  {"id": 2, "title": "Fix auth token rotation", "description": "Tokens are expiring too fast in production", "assignee": "gilfoyle", "status": "in-progress", "created": "2026-02-17T11:00:00Z"},
+  {"id": 3, "title": "Redesign settings page", "description": "Make it not look like it was built in 2003", "assignee": "dinesh", "status": "backlog", "created": "2026-02-16T09:00:00Z"},
+  {"id": 4, "title": "Pitch deck for Series B", "description": "Update financials and TAM slides for Raviga meeting", "assignee": "erlich", "status": "backlog", "created": "2026-02-16T14:00:00Z"},
+  {"id": 5, "title": "Deploy monitoring stack", "description": "Set up Prometheus and Grafana on the new cluster", "assignee": "gilfoyle", "status": "done", "created": "2026-02-15T08:00:00Z"},
+  {"id": 6, "title": "Add hotdog detection endpoint", "description": "Not hotdog. It's a feature.", "assignee": "jiangyang", "status": "done", "created": "2026-02-14T16:00:00Z"},
+  {"id": 7, "title": "Mobile responsive dashboard", "description": "Dashboard breaks on phones, fix grid layouts", "assignee": "dinesh", "status": "in-progress", "created": "2026-02-17T15:00:00Z"}
+]

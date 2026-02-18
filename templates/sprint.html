@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pied Piper — Sprint Board</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0b0e14;--card:#131720;--card-border:#1e2433;--accent:#22d3ee;--text:#e2e8f0;--text-dim:#64748b;--text-bright:#f8fafc}
+body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+a{color:var(--accent);text-decoration:none}
+nav{background:var(--card);border-bottom:1px solid var(--card-border);padding:0 32px;display:flex;align-items:center}
+nav a{padding:14px 20px;font-weight:600;color:var(--text-dim);font-size:14px;border-bottom:2px solid transparent}
+nav a.active{color:var(--accent);font-weight:700;border-bottom-color:var(--accent)}
+nav .spacer{flex:1}
+nav .logout{color:#f85149;font-size:12px}
+.container{max-width:1400px;margin:0 auto;padding:24px 32px}
+.top-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.top-bar h1{font-size:24px;font-weight:700;color:var(--text-bright)}
+.btn{padding:8px 18px;border-radius:8px;border:none;font-size:13px;font-weight:600;cursor:pointer;transition:background .2s}
+.btn-primary{background:var(--accent);color:#0b0e14}.btn-primary:hover{background:#06b6d4}
+.btn-danger{background:#f8514922;color:#f85149;border:1px solid #f8514944}.btn-danger:hover{background:#f8514944}
+.board{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;min-height:60vh}
+.column{background:var(--card);border:1px solid var(--card-border);border-radius:12px;padding:16px;display:flex;flex-direction:column}
+.column-header{font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-dim);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.column-header .count{background:#1e2433;color:var(--text);font-size:11px;padding:2px 8px;border-radius:10px}
+.cards{flex:1;min-height:80px;display:flex;flex-direction:column;gap:8px}
+.cards.drag-over{background:#1e243366;border-radius:8px}
+.card{background:var(--bg);border:1px solid var(--card-border);border-radius:8px;padding:12px;cursor:grab;transition:border-color .2s}
+.card:hover{border-color:var(--accent)}
+.card.dragging{opacity:.4}
+.card-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.card-title{font-size:14px;font-weight:600;color:var(--text-bright)}
+.card-del{background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:16px;padding:0 4px}.card-del:hover{color:#f85149}
+.card-desc{font-size:12px;color:var(--text-dim);margin-bottom:8px;line-height:1.4}
+.card-footer{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--text-dim)}
+.card-footer img{width:20px;height:20px;border-radius:50%}
+.priority{padding:2px 8px;border-radius:4px;font-weight:600;font-size:10px;text-transform:uppercase}
+.p-high{background:#f8514933;color:#f85149}.p-med{background:#fb923c33;color:#fb923c}.p-low{background:#22d3ee22;color:#22d3ee}
+/* Modal */
+.modal-bg{display:none;position:fixed;inset:0;background:#00000088;z-index:100;align-items:center;justify-content:center}
+.modal-bg.open{display:flex}
+.modal{background:var(--card);border:1px solid var(--card-border);border-radius:12px;padding:28px;width:100%;max-width:440px}
+.modal h2{font-size:18px;color:var(--text-bright);margin-bottom:16px}
+.modal label{display:block;font-size:12px;color:var(--text-dim);margin-bottom:4px;margin-top:12px}
+.modal input,.modal textarea,.modal select{width:100%;padding:8px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:6px;color:var(--text);font-size:13px;outline:none}
+.modal input:focus,.modal textarea:focus,.modal select:focus{border-color:var(--accent)}
+.modal textarea{resize:vertical;min-height:60px}
+.modal-actions{display:flex;gap:8px;margin-top:20px;justify-content:flex-end}
+</style>
+</head>
+<body>
+<nav>
+  <a href="/">Dashboard</a>
+  <a href="/team">Team</a>
+  <a href="/sprint" class="active">Sprint Board</a>
+  <div class="spacer"></div>
+  <a href="/logout" class="logout">Logout</a>
+</nav>
+<div class="container">
+  <div class="top-bar"><h1>📋 Sprint Board</h1><button class="btn btn-primary" onclick="openModal()">+ New Card</button></div>
+  <div class="board">
+    <div class="column" data-col="backlog"><div class="column-header">📥 Backlog <span class="count" id="cnt-backlog">0</span></div><div class="cards" id="col-backlog"></div></div>
+    <div class="column" data-col="inprogress"><div class="column-header">🔨 In Progress <span class="count" id="cnt-inprogress">0</span></div><div class="cards" id="col-inprogress"></div></div>
+    <div class="column" data-col="done"><div class="column-header">✅ Done <span class="count" id="cnt-done">0</span></div><div class="cards" id="col-done"></div></div>
+  </div>
+</div>
+
+<div class="modal-bg" id="modalBg" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <h2>New Card</h2>
+    <label>Title</label><input id="f-title" placeholder="Card title">
+    <label>Description</label><textarea id="f-desc" placeholder="Optional description"></textarea>
+    <label>Assignee</label>
+    <select id="f-assignee">
+      <option value="richard">Richard</option><option value="erlich">Erlich</option>
+      <option value="dinesh">Dinesh</option><option value="gilfoyle">Gilfoyle</option>
+      <option value="jiangyang">Jian-Yang</option>
+    </select>
+    <label>Priority</label>
+    <select id="f-priority"><option value="low">Low</option><option value="med" selected>Medium</option><option value="high">High</option></select>
+    <div class="modal-actions">
+      <button class="btn btn-danger" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="addCard()">Add Card</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let board={backlog:[],inprogress:[],done:[]};
+const COLS=['backlog','inprogress','done'];
+
+async function load(){
+  const r=await fetch('/api/sprint');board=await r.json();render();
+}
+async function save(){
+  await fetch('/api/sprint',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(board)});
+}
+
+function render(){
+  COLS.forEach(col=>{
+    const el=document.getElementById('col-'+col);
+    document.getElementById('cnt-'+col).textContent=board[col].length;
+    el.innerHTML=board[col].map((c,i)=>`
+      <div class="card" draggable="true" data-col="${col}" data-idx="${i}">
+        <div class="card-top"><span class="card-title">${esc(c.title)}</span><button class="card-del" onclick="delCard('${col}',${i})">×</button></div>
+        ${c.description?`<div class="card-desc">${esc(c.description)}</div>`:''}
+        <div class="card-footer">
+          <img src="https://api.dicebear.com/7.x/bottts/svg?seed=${c.assignee}" alt="${c.assignee}">
+          <span style="text-transform:capitalize">${c.assignee}</span>
+          <span class="priority p-${c.priority}">${c.priority}</span>
+        </div>
+      </div>`).join('');
+    // drag events
+    el.querySelectorAll('.card').forEach(card=>{
+      card.addEventListener('dragstart',e=>{e.dataTransfer.setData('text/plain',card.dataset.col+':'+card.dataset.idx);card.classList.add('dragging')});
+      card.addEventListener('dragend',()=>card.classList.remove('dragging'));
+    });
+    el.addEventListener('dragover',e=>{e.preventDefault();el.classList.add('drag-over')});
+    el.addEventListener('dragleave',()=>el.classList.remove('drag-over'));
+    el.addEventListener('drop',e=>{
+      e.preventDefault();el.classList.remove('drag-over');
+      const[srcCol,srcIdx]=e.dataTransfer.getData('text/plain').split(':');
+      if(srcCol===col)return;
+      const card=board[srcCol].splice(parseInt(srcIdx),1)[0];
+      board[col].push(card);save();render();
+    });
+  });
+}
+
+function openModal(){document.getElementById('modalBg').classList.add('open')}
+function closeModal(){document.getElementById('modalBg').classList.remove('open')}
+function addCard(){
+  const title=document.getElementById('f-title').value.trim();
+  if(!title)return;
+  board.backlog.push({
+    title,
+    description:document.getElementById('f-desc').value.trim(),
+    assignee:document.getElementById('f-assignee').value,
+    priority:document.getElementById('f-priority').value,
+    created:new Date().toISOString()
+  });
+  save();render();closeModal();
+  document.getElementById('f-title').value='';document.getElementById('f-desc').value='';
+}
+function delCard(col,idx){board[col].splice(idx,1);save();render();}
+function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+load();
+</script>
+</body>
+</html>
