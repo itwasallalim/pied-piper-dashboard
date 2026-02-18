@@ -202,6 +202,9 @@ const AGENT_COLORS = {
 const AGENT_EMOJI = {
   richard: '👔', erlich: '📢', dinesh: '💻', gilfoyle: '🔒', jiangyang: '🍳'
 };
+const AGENT_DISPLAY_NAMES = {
+  richard: 'Richard', erlich: 'Erlich', dinesh: 'Dinesh', gilfoyle: 'Gilfoyle', jiangyang: 'Jian-Yang', unassigned: 'Unassigned'
+};
 
 // ─── Team Bios ───
 const TEAM = [
@@ -249,6 +252,12 @@ function renderTeamBios(agents) {
 }
 
 // ─── Sprint Board (Kanban) ───
+const ASSIGNEE_NAMES = {
+  richard: 'Richard', erlich: 'Erlich', dinesh: 'Dinesh',
+  gilfoyle: 'Gilfoyle', jiangyang: 'Jian-Yang'
+};
+let sprintFilter = 'all';
+
 const DEFAULT_SPRINT = {
   backlog: [
     { id: 't1', title: 'Implement WebRTC peer discovery', assignee: 'richard', priority: 'high' },
@@ -304,11 +313,24 @@ function saveSprint(data) {
 
 let sprintData = loadSprint();
 
+function renderSprintFilters() {
+  const filters = ['all', 'richard', 'dinesh', 'gilfoyle', 'erlich', 'jiangyang'];
+  const labels = { all: '👥 All', richard: '👔 Richard', dinesh: '💻 Dinesh', gilfoyle: '🔒 Gilfoyle', erlich: '📢 Erlich', jiangyang: '🍳 Jian-Yang' };
+  document.getElementById('sprint-filters').innerHTML = filters.map(f => {
+    const active = sprintFilter === f;
+    return `<button onclick="setSprintFilter('${f}')" class="px-3 py-1.5 text-xs rounded-full transition-colors ${active ? 'bg-emerald-900/30 text-emerald-400 border border-emerald-800/50' : 'bg-gray-800 text-gray-400 border border-gray-700 hover:border-gray-500'}">${labels[f]}</button>`;
+  }).join('');
+}
+function setSprintFilter(f) { sprintFilter = f; renderSprint(); }
+
 function renderSprint() {
+  renderSprintFilters();
   const board = document.getElementById('sprint-board');
   board.innerHTML = Object.entries(COL_META).map(([colId, meta]) => {
-    const tasks = sprintData[colId] || [];
-    return `<div class="bg-pp-card border border-pp-border rounded-xl p-4">
+    const allTasks = sprintData[colId] || [];
+    const tasks = sprintFilter === 'all' ? allTasks : allTasks.filter(t => t.assignee === sprintFilter);
+    const isBlocked = colId === 'blocked';
+    return `<div class="bg-pp-card border border-pp-border rounded-xl p-4" ${isBlocked ? 'style="border-top: 3px solid #ef4444; background: linear-gradient(180deg, rgba(127,29,29,0.15) 0%, transparent 40%)"' : ''}>
       <div class="flex items-center justify-between mb-3">
         <h3 class="${meta.headerColor} text-sm font-semibold flex items-center gap-1">${meta.icon} ${meta.label}</h3>
         <span class="text-[10px] text-gray-500 bg-gray-800 px-2 py-0.5 rounded-full">${tasks.length}</span>
@@ -320,6 +342,7 @@ function renderSprint() {
         ${tasks.map(t => {
           const color = AGENT_COLORS[t.assignee] || '#6b7280';
           const emoji = AGENT_EMOJI[t.assignee] || '🤖';
+          const name = AGENT_DISPLAY_NAMES[t.assignee] || t.assignee || 'Unassigned';
           const isDone = colId === 'done';
           return `<div class="kanban-card bg-gray-900/60 border border-pp-border rounded-lg p-3 fade-in"
             draggable="true" data-id="${t.id}"
@@ -328,12 +351,14 @@ function renderSprint() {
             style="border-left: 3px solid ${color}">
             <div class="flex items-start justify-between gap-2">
               <p class="text-xs text-gray-200 font-medium leading-snug ${isDone ? 'line-through text-gray-500' : ''}">${isDone ? '✓ ' : ''}${escapeHtml(t.title)}</p>
-              <span class="text-sm flex-shrink-0">${emoji}</span>
             </div>
-            <div class="flex items-center gap-2 mt-2">
-              <span class="w-2 h-2 rounded-full flex-shrink-0" style="background:${color}"></span>
-              <span class="text-[10px] text-gray-400 capitalize">${t.assignee}</span>
+            <div class="flex items-center gap-1.5 mt-2 px-2 py-1 rounded" style="background:${color}15; border-left: 2px solid ${color}">
+              <span class="text-sm">${emoji}</span>
+              <span class="text-[11px] font-semibold" style="color:${color}">${name}</span>
+            </div>
+            <div class="flex items-center gap-2 mt-1.5">
               <span class="px-1.5 py-0.5 rounded text-[10px] font-medium ${PRIORITY_STYLES[t.priority] || PRIORITY_STYLES.med}">${t.priority}</span>
+              ${t.desc ? `<span class="text-[10px] text-gray-500 truncate" title="${escapeHtml(t.desc)}">📝 ${escapeHtml(t.desc)}</span>` : ''}
             </div>
           </div>`;
         }).join('')}
@@ -363,6 +388,49 @@ function handleDrop(e, targetCol) {
   dragTaskId = null;
   dragSourceCol = null;
 }
+
+// ─── Add Task Modal ───
+function openAddTaskModal() {
+  document.getElementById('task-title').value = '';
+  document.getElementById('task-assignee').value = '';
+  document.getElementById('task-priority').value = 'med';
+  document.getElementById('task-desc').value = '';
+  const modal = document.getElementById('add-task-modal');
+  modal.classList.remove('hidden');
+  modal.classList.add('flex');
+  document.getElementById('task-title').focus();
+}
+function closeAddTaskModal() {
+  const modal = document.getElementById('add-task-modal');
+  modal.classList.add('hidden');
+  modal.classList.remove('flex');
+}
+function addTask() {
+  const title = document.getElementById('task-title').value.trim();
+  if (!title) { document.getElementById('task-title').focus(); return; }
+  const assignee = document.getElementById('task-assignee').value || 'unassigned';
+  const priority = document.getElementById('task-priority').value || 'med';
+  const desc = document.getElementById('task-desc').value.trim();
+  const task = {
+    id: 't' + Date.now(),
+    title,
+    assignee,
+    priority,
+    desc: desc || undefined
+  };
+  sprintData.backlog.push(task);
+  saveSprint(sprintData);
+  renderSprint();
+  closeAddTaskModal();
+}
+// Close modal on backdrop click
+document.getElementById('add-task-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeAddTaskModal();
+});
+// Close modal on Escape
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closeAddTaskModal();
+});
 
 // Render sprint board immediately
 renderSprint();
