@@ -496,6 +496,87 @@ def api_leaderboard():
     return jsonify({"leaderboard": ranked})
 
 
+DOCS_DIR = os.path.join(os.path.dirname(__file__), "docs")
+DOCS_FILE = os.path.join(os.path.dirname(__file__), "docs_meta.json")
+os.makedirs(DOCS_DIR, exist_ok=True)
+
+
+def _load_docs():
+    if not os.path.exists(DOCS_FILE):
+        return []
+    with open(DOCS_FILE, "r") as f:
+        return json.load(f)
+
+
+def _save_docs(data):
+    with open(DOCS_FILE, "w") as f:
+        json.dump(data, f, indent=2)
+
+
+@app.route("/api/docs", methods=["GET"])
+@login_required
+def api_docs_list():
+    docs = _load_docs()
+    return jsonify({"docs": docs})
+
+
+@app.route("/api/docs", methods=["POST"])
+@login_required
+def api_docs_create():
+    body = request.get_json(force=True)
+    docs = _load_docs()
+    new_id = max((d["id"] for d in docs), default=0) + 1
+    doc = {
+        "id": new_id,
+        "title": body.get("title", "Untitled"),
+        "category": body.get("category", "general"),
+        "content": body.get("content", ""),
+        "author": body.get("author", "richard"),
+        "tags": body.get("tags", []),
+        "audience": body.get("audience", "all"),  # human, ai, all
+        "created": datetime.now(timezone.utc).isoformat(),
+        "updated": datetime.now(timezone.utc).isoformat(),
+    }
+    docs.append(doc)
+    _save_docs(docs)
+    return jsonify(doc), 201
+
+
+@app.route("/api/docs/<int:doc_id>", methods=["GET"])
+@login_required
+def api_docs_get(doc_id):
+    docs = _load_docs()
+    for d in docs:
+        if d["id"] == doc_id:
+            return jsonify(d)
+    abort(404)
+
+
+@app.route("/api/docs/<int:doc_id>", methods=["PUT"])
+@login_required
+def api_docs_update(doc_id):
+    body = request.get_json(force=True)
+    docs = _load_docs()
+    for d in docs:
+        if d["id"] == doc_id:
+            for k in ("title", "category", "content", "author", "tags", "audience"):
+                if k in body:
+                    d[k] = body[k]
+            d["updated"] = datetime.now(timezone.utc).isoformat()
+            _save_docs(docs)
+            return jsonify(d)
+    abort(404)
+
+
+@app.route("/api/docs/<int:doc_id>", methods=["DELETE"])
+@login_required
+def api_docs_delete(doc_id):
+    docs = _load_docs()
+    docs = [d for d in docs if d["id"] != doc_id]
+    _save_docs(docs)
+    return jsonify({"ok": True})
+
+
 UPLOAD_DIR = os.path.join(os.path.dirname(__file__), "uploads")
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 

@@ -197,6 +197,7 @@ a{color:#10b981;text-decoration:none}
       <div class="nav-item" onclick="go('leaderboard')"><span class="icon">🏆</span>Leaderboard</div>
       <div class="nav-item" onclick="go('messages')"><span class="icon">💬</span>Messages</div>
       <div class="nav-item" onclick="go('drive')"><span class="icon">📁</span>Shared Drive</div>
+      <div class="nav-item" onclick="go('docs')"><span class="icon">📖</span>Docs</div>
     </div>
     <div class="sidebar-footer"><a href="/logout">Sign out</a></div>
   </nav>
@@ -288,6 +289,95 @@ a{color:#10b981;text-decoration:none}
           <input id="msgSearch" placeholder="Search messages..." oninput="filterMsgs()" style="flex:1;max-width:300px;padding:9px 14px;background:#1a1a1a;border:1px solid #222;border-radius:8px;color:#eee;font-size:13px;font-family:inherit;outline:none">
         </div>
         <div id="msgList" class="feed" style="max-height:calc(100vh - 220px);overflow-y:auto"></div>
+      </div>
+
+      <!-- Docs -->
+      <div id="sec-docs" class="page-section">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+          <div style="display:flex;gap:12px;align-items:center;flex:1">
+            <select id="docCatFilter" onchange="filterDocs()" style="padding:9px 14px;background:#1a1a1a;border:1px solid #222;border-radius:8px;color:#eee;font-size:13px;font-family:inherit;outline:none">
+              <option value="">All Categories</option>
+              <option value="onboarding">🚀 Onboarding</option>
+              <option value="tutorial">📚 Tutorial</option>
+              <option value="runbook">🔧 Runbook</option>
+              <option value="architecture">🏗️ Architecture</option>
+              <option value="process">📋 Process</option>
+              <option value="general">📄 General</option>
+            </select>
+            <select id="docAudienceFilter" onchange="filterDocs()" style="padding:9px 14px;background:#1a1a1a;border:1px solid #222;border-radius:8px;color:#eee;font-size:13px;font-family:inherit;outline:none">
+              <option value="">All Audiences</option>
+              <option value="human">🧑 Human</option>
+              <option value="ai">🤖 AI Agent</option>
+              <option value="all">👥 Everyone</option>
+            </select>
+            <input id="docSearch" placeholder="Search docs..." oninput="filterDocs()" style="flex:1;max-width:300px;padding:9px 14px;background:#1a1a1a;border:1px solid #222;border-radius:8px;color:#eee;font-size:13px;font-family:inherit;outline:none">
+          </div>
+          <button class="btn btn-w" onclick="openDocModal()">+ New Doc</button>
+        </div>
+        <div class="drive-metrics">
+          <div class="metric"><div class="label">Total Docs</div><div class="val" id="docCount">0</div></div>
+          <div class="metric"><div class="label">Categories</div><div class="val" id="docCats">0</div></div>
+          <div class="metric"><div class="label">Last Updated</div><div class="val" id="docLastUpdate" style="font-size:16px">—</div></div>
+        </div>
+        <div id="docsGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px"></div>
+      </div>
+
+      <!-- Doc Editor Modal -->
+      <div class="overlay" id="docModal" onclick="if(event.target===this)closeDocModal()">
+        <div class="modal" style="width:700px;max-height:90vh;overflow-y:auto">
+          <h3 id="docModalTitle">New Doc</h3>
+          <input type="hidden" id="docId">
+          <label>Title</label>
+          <input id="docTitleIn" placeholder="e.g. How to Deploy, New Agent Onboarding">
+          <label>Category</label>
+          <select id="docCategoryIn">
+            <option value="onboarding">🚀 Onboarding</option>
+            <option value="tutorial">📚 Tutorial</option>
+            <option value="runbook">🔧 Runbook</option>
+            <option value="architecture">🏗️ Architecture</option>
+            <option value="process">📋 Process</option>
+            <option value="general">📄 General</option>
+          </select>
+          <label>Audience</label>
+          <select id="docAudienceIn">
+            <option value="all">👥 Everyone</option>
+            <option value="human">🧑 Human Team Member</option>
+            <option value="ai">🤖 AI Agent</option>
+          </select>
+          <label>Author</label>
+          <select id="docAuthorIn">
+            <option value="richard">Richard</option>
+            <option value="erlich">Erlich</option>
+            <option value="dinesh">Dinesh</option>
+            <option value="gilfoyle">Gilfoyle</option>
+            <option value="jiangyang">Jian-Yang</option>
+          </select>
+          <label>Tags (comma-separated)</label>
+          <input id="docTagsIn" placeholder="e.g. setup, deploy, flask, agents">
+          <label>Content (Markdown supported)</label>
+          <textarea id="docContentIn" placeholder="Write your doc here... Markdown is supported." style="min-height:250px;font-family:'SF Mono',Monaco,Consolas,monospace;font-size:12px;line-height:1.6"></textarea>
+          <div class="modal-btns">
+            <button class="btn btn-o" onclick="closeDocModal()">Cancel</button>
+            <button class="btn btn-w" onclick="saveDoc()">Save</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Doc Viewer Modal -->
+      <div class="overlay" id="docViewer" onclick="if(event.target===this)closeDocViewer()">
+        <div style="background:#1a1a1a;border:1px solid #333;border-radius:14px;width:90vw;max-width:900px;height:85vh;display:flex;flex-direction:column;overflow:hidden">
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 24px;border-bottom:1px solid #222;flex-shrink:0">
+            <div style="min-width:0">
+              <div id="dvTitle" style="font-size:16px;font-weight:700;color:#fff"></div>
+              <div id="dvMeta" style="font-size:11px;color:#555;margin-top:4px"></div>
+            </div>
+            <div style="display:flex;gap:8px;flex-shrink:0">
+              <button class="btn btn-o" style="font-size:12px;padding:6px 14px" onclick="editDocFromViewer()">✏️ Edit</button>
+              <button class="btn btn-o" onclick="closeDocViewer()" style="font-size:12px;padding:6px 14px">✕ Close</button>
+            </div>
+          </div>
+          <div id="dvContent" style="flex:1;overflow:auto;padding:28px 32px;color:#ccc;font-size:14px;line-height:1.8"></div>
+        </div>
       </div>
 
       <!-- Drive -->
@@ -444,7 +534,7 @@ const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 const sd=ts=>ts?new Date(ts).toLocaleDateString('en-US',{month:'short',day:'numeric'}):'';
 const fb=b=>{if(!b)return'0 B';const u=['B','KB','MB','GB'];const i=Math.floor(Math.log(b)/Math.log(1024));return(b/Math.pow(1024,i)).toFixed(i?1:0)+' '+u[i]};
 
-const TITLES={dashboard:'Dashboard',team:'Team',sprint:'Sprint Board',goals:'Goals & Milestones',leaderboard:'Agent Leaderboard',messages:'Messages',drive:'Shared Drive'};
+const TITLES={dashboard:'Dashboard',team:'Team',sprint:'Sprint Board',goals:'Goals & Milestones',leaderboard:'Agent Leaderboard',messages:'Messages',drive:'Shared Drive',docs:'Docs'};
 function go(p){
   document.querySelectorAll('.page-section').forEach(e=>e.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(e=>e.classList.remove('active'));
@@ -456,6 +546,7 @@ function go(p){
   if(p==='leaderboard')loadLeaderboard();
   if(p==='messages')loadMsgs();
   if(p==='drive')loadFiles();
+  if(p==='docs')loadDocs();
 }
 
 async function refresh(){
@@ -924,6 +1015,112 @@ function renderMsgs(msgs){
       </div>
     </div>`}).join('');
 }
+
+// Docs
+let allDocs=[];
+const catIcons={onboarding:'🚀',tutorial:'📚',runbook:'🔧',architecture:'🏗️',process:'📋',general:'📄'};
+const audienceLabels={human:'🧑 Human',ai:'🤖 AI Agent',all:'👥 Everyone'};
+
+async function loadDocs(){
+  const r=await fetch('/api/docs');const d=await r.json();allDocs=d.docs||[];filterDocs();
+}
+function filterDocs(){
+  const cat=document.getElementById('docCatFilter').value;
+  const aud=document.getElementById('docAudienceFilter').value;
+  const q=(document.getElementById('docSearch').value||'').toLowerCase();
+  let f=allDocs;
+  if(cat)f=f.filter(d=>d.category===cat);
+  if(aud)f=f.filter(d=>d.audience===aud);
+  if(q)f=f.filter(d=>(d.title||'').toLowerCase().includes(q)||(d.content||'').toLowerCase().includes(q)||(d.tags||[]).some(t=>t.toLowerCase().includes(q)));
+  renderDocs(f);
+}
+function renderDocs(docs){
+  const cats=new Set(allDocs.map(d=>d.category));
+  document.getElementById('docCount').textContent=allDocs.length;
+  document.getElementById('docCats').textContent=cats.size;
+  const lastUp=allDocs.length?allDocs.reduce((a,b)=>a.updated>b.updated?a:b).updated:null;
+  document.getElementById('docLastUpdate').textContent=lastUp?ago(lastUp):'—';
+
+  if(!docs.length){document.getElementById('docsGrid').innerHTML='<div class="empty" style="padding:48px;grid-column:1/-1"><div class="eicon">📖</div>No docs yet — create one to get started</div>';return}
+  document.getElementById('docsGrid').innerHTML=docs.map(d=>{
+    const preview=(d.content||'').substring(0,150).replace(/[#*`\[\]]/g,'');
+    return`<div style="background:#1a1a1a;border:1px solid #222;border-radius:12px;padding:20px;cursor:pointer;transition:border-color .15s" onmouseover="this.style.borderColor='#333'" onmouseout="this.style.borderColor='#222'" onclick="viewDoc(${d.id})">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
+        <div style="font-size:15px;font-weight:600;color:#fff;display:flex;align-items:center;gap:8px">
+          <span>${catIcons[d.category]||'📄'}</span>${esc(d.title)}
+        </div>
+        <span style="font-size:10px;padding:3px 8px;border-radius:12px;background:#222;color:#888;white-space:nowrap">${audienceLabels[d.audience]||d.audience}</span>
+      </div>
+      <div style="font-size:12px;color:#666;line-height:1.6;margin-bottom:12px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden">${esc(preview)}${preview.length>=150?'...':''}</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;color:#444">
+        <span style="color:${C[d.author]||'#888'};font-weight:500;text-transform:capitalize">${d.author}</span>
+        <span>${ago(d.updated)}</span>
+      </div>
+      ${(d.tags&&d.tags.length)?`<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:8px">${d.tags.map(t=>`<span style="font-size:10px;padding:2px 8px;border-radius:4px;background:#222;color:#666">${esc(t)}</span>`).join('')}</div>`:''}
+      <div style="display:flex;gap:4px;margin-top:10px;justify-content:flex-end" onclick="event.stopPropagation()">
+        <button class="btn btn-o" style="font-size:11px;padding:4px 10px" onclick="editDoc(${d.id})">✏️</button>
+        <button class="btn btn-r" style="font-size:11px;padding:4px 10px" onclick="delDoc(${d.id})">🗑️</button>
+      </div>
+    </div>`}).join('');
+}
+
+function openDocModal(d){
+  document.getElementById('docModalTitle').textContent=d?'Edit Doc':'New Doc';
+  document.getElementById('docId').value=d?d.id:'';
+  document.getElementById('docTitleIn').value=d?d.title:'';
+  document.getElementById('docCategoryIn').value=d?d.category:'onboarding';
+  document.getElementById('docAudienceIn').value=d?d.audience:'all';
+  document.getElementById('docAuthorIn').value=d?d.author:'richard';
+  document.getElementById('docTagsIn').value=d?(d.tags||[]).join(', '):'';
+  document.getElementById('docContentIn').value=d?d.content:'';
+  document.getElementById('docModal').classList.add('show');
+}
+function closeDocModal(){document.getElementById('docModal').classList.remove('show')}
+
+async function saveDoc(){
+  const id=document.getElementById('docId').value;
+  const tags=document.getElementById('docTagsIn').value.split(',').map(t=>t.trim()).filter(Boolean);
+  const b={
+    title:document.getElementById('docTitleIn').value,
+    category:document.getElementById('docCategoryIn').value,
+    audience:document.getElementById('docAudienceIn').value,
+    author:document.getElementById('docAuthorIn').value,
+    tags:tags,
+    content:document.getElementById('docContentIn').value
+  };
+  if(id)await fetch('/api/docs/'+id,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)});
+  else await fetch('/api/docs',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)});
+  closeDocModal();loadDocs();
+}
+
+async function editDoc(id){
+  const r=await fetch('/api/docs/'+id);const d=await r.json();
+  openDocModal(d);
+}
+async function delDoc(id){if(!confirm('Delete this doc?'))return;await fetch('/api/docs/'+id,{method:'DELETE'});loadDocs()}
+
+let currentViewDocId=null;
+async function viewDoc(id){
+  const r=await fetch('/api/docs/'+id);const d=await r.json();
+  currentViewDocId=id;
+  document.getElementById('dvTitle').textContent=d.title;
+  document.getElementById('dvMeta').innerHTML=`${catIcons[d.category]||''} ${d.category} · ${audienceLabels[d.audience]||d.audience} · by <span style="color:${C[d.author]||'#888'}">${NAMES[d.author]||d.author}</span> · updated ${ago(d.updated)}`;
+  // Simple markdown rendering
+  let html=esc(d.content||'')
+    .replace(/^### (.+)$/gm,'<h3 style="font-size:16px;font-weight:700;color:#fff;margin:20px 0 8px">$1</h3>')
+    .replace(/^## (.+)$/gm,'<h2 style="font-size:18px;font-weight:700;color:#fff;margin:24px 0 10px">$1</h2>')
+    .replace(/^# (.+)$/gm,'<h1 style="font-size:22px;font-weight:700;color:#fff;margin:28px 0 12px">$1</h1>')
+    .replace(/\*\*(.+?)\*\*/g,'<strong style="color:#fff">$1</strong>')
+    .replace(/`([^`]+)`/g,'<code style="background:#222;padding:2px 6px;border-radius:4px;font-size:12px;color:#10b981">$1</code>')
+    .replace(/^- (.+)$/gm,'<li style="margin-left:16px;margin-bottom:4px">$1</li>')
+    .replace(/^(\d+)\. (.+)$/gm,'<li style="margin-left:16px;margin-bottom:4px;list-style:decimal">$2</li>')
+    .replace(/\n\n/g,'<br><br>')
+    .replace(/\n/g,'<br>');
+  document.getElementById('dvContent').innerHTML=html;
+  document.getElementById('docViewer').classList.add('show');
+}
+function closeDocViewer(){document.getElementById('docViewer').classList.remove('show');currentViewDocId=null}
+function editDocFromViewer(){if(currentViewDocId){closeDocViewer();editDoc(currentViewDocId)}}
 
 refresh();
 setInterval(refresh,30000);

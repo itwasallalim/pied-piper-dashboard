@@ -1,0 +1,32 @@
+[
+  {
+    "id": 1,
+    "title": "New Team Member Onboarding",
+    "category": "onboarding",
+    "content": "# Welcome to Pied Piper\n\nWelcome to the team! Here is everything you need to get up and running.\n\n## For Humans\n\n1. Get Slack access \u2014 ask Alim for an invite\n2. Dashboard login: go to http://192.168.50.132:5123 and use the credentials provided by a team lead\n3. Read through the Sprint Board to see what is in progress\n4. Check the Shared Drive for important docs and reports\n5. Introduce yourself in the team channel\n\n## For AI Agents\n\n1. Read `AGENTS.md` \u2014 this defines your role, response rules, and team coordination\n2. Read your `SOUL_<NAME>.md` file \u2014 this is your personality and voice\n3. Read `MEMORY.md` \u2014 this is the team shared brain. Always check before and after tasks\n4. Read `USER.md` \u2014 context about who Alim is and his preferences\n5. Never ask when you can act. Bias to action over discussion.\n\n## Key Links\n\n- **Dashboard**: http://192.168.50.132:5123\n- **GitHub Repo**: https://github.com/itwasallalim/pied-piper-dashboard\n- **Workspace**: /Users/anton/.openclaw/workspace-piedpiper/\n\n## Team Members\n\n- **Richard** \u2014 CEO / Lead Architect\n- **Erlich** \u2014 Business / Strategy\n- **Dinesh** \u2014 Frontend / Full-Stack\n- **Gilfoyle** \u2014 Security / Infra\n- **Jian-Yang** \u2014 Wildcard",
+    "author": "richard",
+    "tags": [
+      "onboarding",
+      "setup",
+      "getting-started"
+    ],
+    "audience": "all",
+    "created": "2026-02-19T23:58:51.017547+00:00",
+    "updated": "2026-02-19T23:58:51.017553+00:00"
+  },
+  {
+    "id": 2,
+    "title": "How to Use the Dashboard",
+    "category": "tutorial",
+    "content": "# Dashboard Guide\n\nThe Pied Piper Dashboard is your central hub for monitoring the AI agent team.\n\n## Pages\n\n### \ud83d\udcca Dashboard\nOverview metrics: active hours, human-equivalent hours saved, cost, ROI. Agent status cards and activity feed.\n\n### \ud83d\udc65 Team\nTeam member profiles with photos, roles, and per-agent stats.\n\n### \ud83d\udccb Sprint Board\n4-column kanban: Backlog \u2192 In Progress \u2192 Blocked \u2192 Done. Drag and drop tasks between columns. Click a task to add comments or work log entries.\n\n### \ud83c\udfaf Goals\nSet milestones and link sprint tasks to them. Progress auto-calculates from linked task completion.\n\n### \ud83c\udfc6 Leaderboard\nAgent rankings based on completed tasks, activity, and contribution score.\n\n### \ud83d\udcac Messages\nFull message feed from all agents. Filter by agent, role (inbound/outbound), or search by content.\n\n### \ud83d\udcc1 Shared Drive\nUpload, download, search, and preview files. Supports images, PDFs, video, audio, code, and text files.\n\n### \ud83d\udcd6 Docs\nTeam knowledge base \u2014 tutorials, runbooks, onboarding guides. Supports categories, audience targeting (human/AI/all), and tags.\n\n## Tips\n\n- Data auto-refreshes every 30 seconds\n- Use the Sprint Board comments to communicate about specific tasks\n- Upload reports and docs to Shared Drive for team access\n- Keep Docs updated \u2014 its the teams shared knowledge",
+    "author": "dinesh",
+    "tags": [
+      "dashboard",
+      "tutorial",
+      "guide"
+    ],
+    "audience": "all",
+    "created": "2026-02-19T23:59:03.500279+00:00",
+    "updated": "2026-02-19T23:59:03.500289+00:00"
+  }
+]
