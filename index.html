@@ -1,648 +1,324 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Pied Piper — Agent Dashboard</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<script>
-tailwind.config = {
-  darkMode: 'class',
-  theme: {
-    extend: {
-      colors: {
-        pp: { green: '#00b894', dark: '#0a0f1a', card: '#111827', border: '#1f2937', accent: '#10b981' }
-      }
-    }
-  }
-}
-</script>
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
-body { font-family: 'Inter', sans-serif; background: #0a0f1a; }
-.mono { font-family: 'JetBrains Mono', monospace; }
-.glow { box-shadow: 0 0 20px rgba(16, 185, 129, 0.1); }
-.status-active { background: #10b981; box-shadow: 0 0 8px #10b981; }
-.status-idle { background: #f59e0b; box-shadow: 0 0 8px #f59e0b; }
-.status-inactive { background: #6b7280; }
-@keyframes pulse-dot { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
-.pulse { animation: pulse-dot 2s ease-in-out infinite; }
-@keyframes live-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
-.live-dot { animation: live-blink 1.5s ease-in-out infinite; }
-.scrollbar-thin::-webkit-scrollbar { width: 6px; }
-.scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
-.scrollbar-thin::-webkit-scrollbar-thumb { background: #374151; border-radius: 3px; }
-.msg-in { border-left: 3px solid #3b82f6; }
-.msg-out { border-left: 3px solid #10b981; }
-.fade-in { animation: fadeIn 0.3s ease-in; }
-@keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
-/* Sprint board drag styles */
-.kanban-col { min-height: 120px; }
-.kanban-card { cursor: grab; transition: transform 0.15s, box-shadow 0.15s; }
-.kanban-card:active { cursor: grabbing; }
-.kanban-card.dragging { opacity: 0.5; transform: scale(0.95); }
-.kanban-col.drag-over { background: rgba(16, 185, 129, 0.08); border-style: dashed; }
-.blocked-col { border-color: #b45309 !important; }
-.blocked-col .kanban-col.drag-over { background: rgba(239, 68, 68, 0.08); }
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pied Piper Dashboard - File Management</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .file-drop-zone { border: 3px dashed #4ade80; border-radius: 15px; }
+    .file-item { transition: all 0.3s ease; }
+    .file-item:hover { transform: translateY(-2px); }
+  </style>
 </head>
-<body class="min-h-screen text-gray-100">
+<body class="bg-gray-900 text-white min-h-screen p-4">
+  <div class="max-w-7xl mx-auto">
+    <!-- Header -->
+    <div class="text-center mb-8">
+      <h1 class="text-4xl font-bold text-green-400 mb-2">🏗️ Pied Piper Dashboard</h1>
+      <p class="text-green-300">Team File Management Workspace</p>
+    </div>
 
-<div class="max-w-[1600px] mx-auto px-6 py-6">
-  <!-- Header -->
-  <div class="flex items-center justify-between mb-8">
-    <div class="flex items-center gap-4">
-      <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white font-bold text-lg">PP</div>
-      <div>
-        <h1 class="text-2xl font-bold text-white tracking-tight">Pied Piper</h1>
-        <p class="text-sm text-gray-500">Agent Team Dashboard</p>
+    <!-- Quick Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+      <div class="bg-gray-800 p-4 rounded-lg text-center">
+        <div class="text-2xl font-bold text-green-400" id="total-files">0</div>
+        <div class="text-sm text-green-300">Files Uploaded</div>
+      </div>
+      <div class="bg-gray-800 p-4 rounded-lg text-center">
+        <div class="text-2xl font-bold text-green-400" id="total-size">0 KB</div>
+        <div class="text-sm text-green-300">Storage Used</div>
       </div>
     </div>
-    <div class="flex items-center gap-4">
-      <div id="live-indicator" class="flex items-center gap-2 px-3 py-1.5 bg-emerald-900/30 border border-emerald-800/50 rounded-full">
-        <div class="w-2 h-2 rounded-full bg-emerald-400 live-dot"></div>
-        <span class="text-xs text-emerald-400 font-medium">LIVE</span>
-      </div>
-      <span id="last-updated" class="text-xs text-gray-500 mono"></span>
-      <button onclick="loadData()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-2">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-        Refresh
+
+    <!-- Upload Section -->
+    <div class="file-drop-zone bg-gray-800 hover:bg-gray-700 p-8 mb-6 text-center">
+      <h2 class="text-xl font-bold mb-4">📤 Upload Work Products</h2>
+      <p class="mb-4 text-green-300">Drag & drop or click to upload PDF, Excel, PowerPoint, code files</p>
+      <input type="file" id="file-input" multiple class="hidden" accept="*">
+      <button onclick="document.getElementById('file-input').click()" 
+              class="bg-green-500 text-white px-6 py-2 rounded-lg hover:bg-green-600">
+        Browse Files
       </button>
-      <a href="/logout" class="px-3 py-2 text-xs text-gray-400 hover:text-white transition-colors">Logout</a>
     </div>
-  </div>
 
-  <!-- Cost Summary Bar -->
-  <div id="cost-bar" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8"></div>
-
-  <!-- Agent Cards -->
-  <div id="agent-cards" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8"></div>
-
-  <!-- Meet the Team -->
-  <div class="mb-8">
-    <h2 class="text-xl font-bold text-white mb-4 flex items-center gap-2">👥 Meet the Team</h2>
-    <div id="team-bios" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4"></div>
-  </div>
-
-  <!-- Sprint Board -->
-  <div class="mb-8">
-    <div class="flex items-center justify-between mb-4">
-      <h2 class="text-xl font-bold text-white flex items-center gap-2">🗂️ Sprint Board</h2>
-      <button onclick="openAddTaskModal()" class="w-9 h-9 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xl font-bold flex items-center justify-center transition-colors" title="Add Task">+</button>
-    </div>
-    <div id="sprint-filters" class="flex gap-2 mb-4 flex-wrap"></div>
-    <div id="sprint-board" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4"></div>
-  </div>
-
-  <!-- Add Task Modal -->
-  <div id="add-task-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/60">
-    <div class="bg-pp-card border border-pp-border rounded-xl p-6 w-full max-w-md mx-4">
-      <h3 class="text-lg font-bold text-white mb-4">➕ New Task</h3>
-      <div class="space-y-3">
-        <div>
-          <label class="text-xs text-gray-400 block mb-1">Title *</label>
-          <input id="task-title" type="text" class="w-full bg-gray-900 border border-pp-border rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500" placeholder="Task title">
-        </div>
-        <div>
-          <label class="text-xs text-gray-400 block mb-1">Assignee</label>
-          <select id="task-assignee" class="w-full bg-gray-900 border border-pp-border rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500">
-            <option value="">Unassigned</option>
-            <option value="richard">👔 Richard</option>
-            <option value="dinesh">💻 Dinesh</option>
-            <option value="gilfoyle">🔒 Gilfoyle</option>
-            <option value="erlich">📢 Erlich</option>
-            <option value="jiangyang">🍳 Jian-Yang</option>
-          </select>
-        </div>
-        <div>
-          <label class="text-xs text-gray-400 block mb-1">Priority</label>
-          <select id="task-priority" class="w-full bg-gray-900 border border-pp-border rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500">
-            <option value="high">High</option>
-            <option value="med" selected>Medium</option>
-            <option value="low">Low</option>
-          </select>
-        </div>
-        <div>
-          <label class="text-xs text-gray-400 block mb-1">Description (optional)</label>
-          <textarea id="task-desc" class="w-full bg-gray-900 border border-pp-border rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500 h-20 resize-none" placeholder="Optional description"></textarea>
-        </div>
+    <!-- File Categories -->
+    <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
+      <div class="bg-gray-800 p-4 rounded-lg">
+        <h3 class="text-green-400 font-bold mb-2">📄 Documents</h3>
+        <div class="text-sm" id="docs-count">(0)</div>
       </div>
-      <div class="flex gap-3 mt-5">
-        <button onclick="addTask()" class="flex-1 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium rounded-lg transition-colors">Add to Backlog</button>
-        <button onclick="closeAddTaskModal()" class="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 text-sm rounded-lg transition-colors">Cancel</button>
+      <div class="bg-gray-800 p-4 rounded-lg">
+        <h3 class="text-green-400 font-bold mb-2">📊 Presentations</h3>
+        <div class="text-sm" id="presentations-count">(0)</div>
+      </div>
+      <div class="bg-gray-800 p-4 rounded-lg">
+        <h3 class="text-green-400 font-bold mb-2">📈 Spreadsheets</h3>
+        <div class="text-sm" id="spreadsheets-count">(0)</div>
+      </div>
+      <div class="bg-gray-800 p-4 rounded-lg">
+        <h3 class="text-green-400 font-bold mb-2">💻 Code</h3>
+        <div class="text-sm" id="code-count">(0)</div>
+      </div>
+      <div class="bg-gray-800 p-4 rounded-lg">
+        <h3 class="text-green-400 font-bold mb-2">🎨 Designs</h3>
+        <div class="text-sm" id="designs-count">(0)</div>
+      </div>
+    </div>
+
+    <!-- Files Display -->
+    <div id="files-container">
+      <h2 class="text-xl font-bold mb-4 text-green-400">📁 Files</h2>
+      <div id="files-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <p class="text-green-300 col-span-full text-center">No files yet - start uploading!</p>
       </div>
     </div>
   </div>
 
-  <!-- Main Grid -->
-  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-    <!-- Messages Feed -->
-    <div class="lg:col-span-2 bg-pp-card border border-pp-border rounded-xl p-5">
-      <div class="flex items-center justify-between mb-4">
-        <h2 class="text-lg font-semibold text-white">💬 Messages</h2>
-        <div class="flex gap-2">
-          <button onclick="filterMessages('all')" id="filter-all" class="px-3 py-1 text-xs rounded-full bg-emerald-900/30 text-emerald-400 border border-emerald-800/50">All</button>
-          <button onclick="filterMessages('in')" id="filter-in" class="px-3 py-1 text-xs rounded-full bg-gray-800 text-gray-400 border border-gray-700">In</button>
-          <button onclick="filterMessages('out')" id="filter-out" class="px-3 py-1 text-xs rounded-full bg-gray-800 text-gray-400 border border-gray-700">Out</button>
-        </div>
-      </div>
-      <div id="messages-feed" class="space-y-2 max-h-[500px] overflow-y-auto scrollbar-thin pr-2"></div>
-    </div>
+  <script>
+    let uploadedFiles = [];
 
-    <!-- Agent Message Stats + Channels -->
-    <div class="space-y-6">
-      <div class="bg-pp-card border border-pp-border rounded-xl p-5">
-        <h2 class="text-lg font-semibold text-white mb-4">📊 Message Counts</h2>
-        <div id="msg-counts" class="space-y-3"></div>
-      </div>
-      <div class="bg-pp-card border border-pp-border rounded-xl p-5">
-        <h2 class="text-lg font-semibold text-white mb-4">📡 Active Channels</h2>
-        <div id="channels-list" class="space-y-2"></div>
-      </div>
-    </div>
-  </div>
+    // File upload handling
+    document.getElementById('file-input').addEventListener('change', handleFiles);
 
-  <!-- Session Log + Timeline -->
-  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-    <div class="lg:col-span-2 bg-pp-card border border-pp-border rounded-xl p-5">
-      <h2 class="text-lg font-semibold text-white mb-4">Session Log</h2>
-      <div class="overflow-x-auto max-h-[400px] overflow-y-auto scrollbar-thin">
-        <table class="w-full text-sm">
-          <thead class="text-gray-400 border-b border-pp-border sticky top-0 bg-pp-card">
-            <tr>
-              <th class="text-left py-2 px-3 font-medium">Agent</th>
-              <th class="text-left py-2 px-3 font-medium">Session</th>
-              <th class="text-left py-2 px-3 font-medium">Channel</th>
-              <th class="text-left py-2 px-3 font-medium">Updated</th>
-              <th class="text-right py-2 px-3 font-medium">Tokens</th>
-            </tr>
-          </thead>
-          <tbody id="session-table" class="text-gray-300"></tbody>
-        </table>
-      </div>
-    </div>
-    <div class="bg-pp-card border border-pp-border rounded-xl p-5">
-      <h2 class="text-lg font-semibold text-white mb-4">Activity Timeline</h2>
-      <div id="timeline" class="space-y-3 max-h-[400px] overflow-y-auto scrollbar-thin pr-2"></div>
-    </div>
-  </div>
-
-  <!-- Cron Runs -->
-  <div class="bg-pp-card border border-pp-border rounded-xl p-5 mb-6">
-    <h2 class="text-lg font-semibold text-white mb-4">Cron Runs</h2>
-    <div id="cron-runs" class="space-y-2 max-h-[200px] overflow-y-auto scrollbar-thin"></div>
-  </div>
-</div>
-
-<script>
-const AGENT_COLORS = {
-  richard: '#3b82f6', erlich: '#f59e0b', dinesh: '#10b981',
-  gilfoyle: '#8b5cf6', jiangyang: '#ef4444'
-};
-const AGENT_EMOJI = {
-  richard: '👔', erlich: '📢', dinesh: '💻', gilfoyle: '🔒', jiangyang: '🍳'
-};
-const AGENT_DISPLAY_NAMES = {
-  richard: 'Richard', erlich: 'Erlich', dinesh: 'Dinesh', gilfoyle: 'Gilfoyle', jiangyang: 'Jian-Yang', unassigned: 'Unassigned'
-};
-
-// ─── Team Bios ───
-const TEAM = [
-  { id: 'richard', name: 'Richard Hendricks', emoji: '👔', role: 'CEO & Lead Architect',
-    bio: 'Visionary behind middle-out compression. Anxiety-prone but brilliant. Writes the best code when no one\'s watching.',
-    favEmoji: '😰', color: '#3b82f6' },
-  { id: 'erlich', name: 'Erlich Bachman', emoji: '📢', role: 'Business Development & Chief Evangelist',
-    bio: 'Runs the incubator. Loud, confident, occasionally right. Handles all things branding and pitching.',
-    favEmoji: '🎩', color: '#f59e0b' },
-  { id: 'dinesh', name: 'Dinesh Chugtai', emoji: '💻', role: 'Full-Stack Engineer',
-    bio: 'Frontend specialist who secretly wants to be a backend guy. In constant competition with Gilfoyle. Most active on the team.',
-    favEmoji: '🏎️', color: '#10b981' },
-  { id: 'gilfoyle', name: 'Bertram Gilfoyle', emoji: '🔒', role: 'Systems Architect & Security',
-    bio: 'LaVeyan Satanist. Runs infrastructure. Speaks in monotone truths. Will outlast everyone.',
-    favEmoji: '🐐', color: '#8b5cf6' },
-  { id: 'jiangyang', name: 'Jian-Yang', emoji: '🍳', role: 'Wildcard',
-    bio: 'Builds things nobody asked for. May or may not understand what Pied Piper does. Devastating when he chooses to speak.',
-    favEmoji: '🔥', color: '#ef4444' }
-];
-
-function renderTeamBios(agents) {
-  const agentMap = {};
-  (agents || []).forEach(a => agentMap[a.id] = a);
-  document.getElementById('team-bios').innerHTML = TEAM.map(t => {
-    const a = agentMap[t.id];
-    const status = a ? a.status : 'inactive';
-    const tokens = a ? (a.total_input + a.total_output + a.total_cache_read) : 0;
-    return `<div class="bg-pp-card border border-pp-border rounded-xl p-5 glow hover:border-gray-600 transition-colors" style="border-top: 3px solid ${t.color}">
-      <div class="flex flex-col items-center text-center">
-        <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(t.name)}" alt="${t.name}" class="w-20 h-20 rounded-full bg-gray-800 mb-3">
-        <div class="flex items-center gap-2 mb-1">
-          <span class="text-lg">${t.emoji}</span>
-          <h3 class="text-sm font-bold text-white">${t.name}</h3>
-          <div class="w-2 h-2 rounded-full status-${status} ${status === 'active' ? 'pulse' : ''}"></div>
-        </div>
-        <p class="text-xs text-emerald-400 font-medium mb-2">${t.role}</p>
-        <p class="text-xs text-gray-400 leading-relaxed mb-3">${t.bio}</p>
-        <div class="flex items-center gap-3 text-[10px] text-gray-500">
-          <span class="mono">${fmt(tokens)} tokens</span>
-          <span>Fav: ${t.favEmoji}</span>
-        </div>
-      </div>
-    </div>`;
-  }).join('');
-}
-
-// ─── Sprint Board (Kanban) ───
-const ASSIGNEE_NAMES = {
-  richard: 'Richard', erlich: 'Erlich', dinesh: 'Dinesh',
-  gilfoyle: 'Gilfoyle', jiangyang: 'Jian-Yang'
-};
-let sprintFilter = 'all';
-
-const DEFAULT_SPRINT = {
-  backlog: [
-    { id: 't1', title: 'Implement WebRTC peer discovery', assignee: 'richard', priority: 'high' },
-    { id: 't2', title: 'Design new landing page', assignee: 'erlich', priority: 'med' },
-    { id: 't3', title: 'Set up monitoring alerts', assignee: 'gilfoyle', priority: 'med' }
-  ],
-  inprogress: [
-    { id: 't4', title: 'Build team dashboard', assignee: 'richard', priority: 'high' },
-    { id: 't5', title: 'Optimize compression pipeline', assignee: 'dinesh', priority: 'high' },
-    { id: 't6', title: 'Harden API authentication', assignee: 'gilfoyle', priority: 'high' }
-  ],
-  review: [
-    { id: 't7', title: 'Middleware caching layer', assignee: 'dinesh', priority: 'med' },
-    { id: 't8', title: 'Investor deck v3', assignee: 'erlich', priority: 'low' }
-  ],
-  done: [
-    { id: 't9', title: 'Competitive analysis report', assignee: 'richard', priority: 'med' },
-    { id: 't10', title: 'Initial Cloudflare tunnel setup', assignee: 'richard', priority: 'high' },
-    { id: 't11', title: 'Deploy auth on dashboard', assignee: 'gilfoyle', priority: 'high' }
-  ]
-};
-
-const COL_META = {
-  backlog: { label: 'Backlog', icon: '📋', headerColor: 'text-gray-400' },
-  inprogress: { label: 'In Progress', icon: '🔧', headerColor: 'text-blue-400' },
-  blocked: { label: 'Blocked', icon: '🚫', headerColor: 'text-red-400' },
-  review: { label: 'Review', icon: '👀', headerColor: 'text-yellow-400' },
-  done: { label: 'Done', icon: '✅', headerColor: 'text-emerald-400' }
-};
-
-const PRIORITY_STYLES = {
-  high: 'bg-red-900/40 text-red-400',
-  med: 'bg-yellow-900/40 text-yellow-400',
-  low: 'bg-gray-800 text-gray-400'
-};
-
-function loadSprint() {
-  try {
-    const saved = localStorage.getItem('pp-sprint');
-    if (saved) {
-      const d = JSON.parse(saved);
-      if (!d.blocked) d.blocked = [];
-      return d;
+    function handleFiles(e) {
+      const files = Array.from(e.target.files);
+      files.forEach(file => {
+        const category = categorizeFile(file.name);
+        uploadedFiles.push({
+          name: file.name,
+          size: formatBytes(file.size),
+          category: category,
+          date: new Date().toLocaleDateString()
+        });
+      });
+      displayFiles();
+      updateStats();
     }
-  } catch {}
-  const d = JSON.parse(JSON.stringify(DEFAULT_SPRINT));
-  if (!d.blocked) d.blocked = [];
-  return d;
-}
-function saveSprint(data) {
-  localStorage.setItem('pp-sprint', JSON.stringify(data));
-}
 
-let sprintData = loadSprint();
+    function categorizeFile(filename) {
+      const ext = filename.toLowerCase().split('.').pop();
+      const categories = {
+        documents: ['pdf','doc','docx','txt','md'],
+        presentations: ['ppt','pptx','key'],
+        spreadsheets: ['xls','xlsx','csv'],
+        code: ['js','py','html','css','json','sql','java','cpp'],
+        designs: ['png','jpg','jpeg','gif','svg']
+      };
+      
+      for (const [cat, exts] of Object.entries(categories)) {
+        if (exts.includes(ext)) return cat;
+      }
+      return 'other';
+    }
 
-function renderSprintFilters() {
-  const filters = ['all', 'richard', 'dinesh', 'gilfoyle', 'erlich', 'jiangyang'];
-  const labels = { all: '👥 All', richard: '👔 Richard', dinesh: '💻 Dinesh', gilfoyle: '🔒 Gilfoyle', erlich: '📢 Erlich', jiangyang: '🍳 Jian-Yang' };
-  document.getElementById('sprint-filters').innerHTML = filters.map(f => {
-    const active = sprintFilter === f;
-    return `<button onclick="setSprintFilter('${f}')" class="px-3 py-1.5 text-xs rounded-full transition-colors ${active ? 'bg-emerald-900/30 text-emerald-400 border border-emerald-800/50' : 'bg-gray-800 text-gray-400 border border-gray-700 hover:border-gray-500'}">${labels[f]}</button>`;
-  }).join('');
-}
-function setSprintFilter(f) { sprintFilter = f; renderSprint(); }
+    function formatBytes(bytes) {
+      if (bytes === 0) return '0 Bytes';
+      const k = 1024;
+      const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
 
-function renderSprint() {
-  renderSprintFilters();
-  const board = document.getElementById('sprint-board');
-  board.innerHTML = Object.entries(COL_META).map(([colId, meta]) => {
-    const allTasks = sprintData[colId] || [];
-    const tasks = sprintFilter === 'all' ? allTasks : allTasks.filter(t => t.assignee === sprintFilter);
-    const isBlocked = colId === 'blocked';
-    return `<div class="bg-pp-card border border-pp-border rounded-xl p-4" ${isBlocked ? 'style="border-top: 3px solid #ef4444; background: linear-gradient(180deg, rgba(127,29,29,0.15) 0%, transparent 40%)"' : ''}>
-      <div class="flex items-center justify-between mb-3">
-        <h3 class="${meta.headerColor} text-sm font-semibold flex items-center gap-1">${meta.icon} ${meta.label}</h3>
-        <span class="text-[10px] text-gray-500 bg-gray-800 px-2 py-0.5 rounded-full">${tasks.length}</span>
-      </div>
-      <div class="kanban-col space-y-2" data-col="${colId}"
-        ondragover="event.preventDefault(); this.classList.add('drag-over')"
-        ondragleave="this.classList.remove('drag-over')"
-        ondrop="handleDrop(event, '${colId}'); this.classList.remove('drag-over')">
-        ${tasks.map(t => {
-          const color = AGENT_COLORS[t.assignee] || '#6b7280';
-          const emoji = AGENT_EMOJI[t.assignee] || '🤖';
-          const name = AGENT_DISPLAY_NAMES[t.assignee] || t.assignee || 'Unassigned';
-          const isDone = colId === 'done';
-          return `<div class="kanban-card bg-gray-900/60 border border-pp-border rounded-lg p-3 fade-in"
-            draggable="true" data-id="${t.id}"
-            ondragstart="handleDragStart(event, '${t.id}', '${colId}')"
-            ondragend="this.classList.remove('dragging')"
-            style="border-left: 3px solid ${color}">
-            <div class="flex items-start justify-between gap-2">
-              <p class="text-xs text-gray-200 font-medium leading-snug ${isDone ? 'line-through text-gray-500' : ''}">${isDone ? '✓ ' : ''}${escapeHtml(t.title)}</p>
+    function displayFiles() {
+      const categories = { documents: [], presentations: [], spreadsheets: [], code: [], designs: [], other: [] };
+      
+      uploadedFiles.forEach(file => {
+        categories[file.category].push(file);
+      });
+
+      let grid = '';
+      Object.entries(categories).forEach(([cat, files]) => {
+        if (files.length > 0) {
+          files.forEach(file => {
+            grid += `
+              <div class="bg-gray-800 p-4 rounded-lg file-item">
+                <div class="text-green-400 font-bold">${file.name}</div>
+                <div class="text-sm text-green-300">${file.size} • ${file.date}</div>
+                <a href="#" class="text-blue-400 hover:text-blue-300 text-sm">📥 Download</a>
+              </div>
+            `;
+          });
+        }
+      });
+      
+      document.getElementById('files-grid').innerHTML = grid || '<p class="text-green-300 col-span-full text-center">No files uploaded yet</p>';
+    }
+
+    function updateStats() {
+      document.getElementById('total-files').textContent = uploadedFiles.length;
+      const totalSize = uploadedFiles.reduce((sum, f) => sum + (f.size.includes('KB') ? 1024 : 1), 0);
+      document.getElementById('total-size').textContent = formatBytes(totalSize);
+      
+      const counts = { documents: 0, presentations: 0, spreadsheets: 0, code: 0, designs: 0 };
+      uploadedFiles.forEach(file => counts[file.category]++);
+      
+      Object.keys(counts).forEach(cat => {
+        document.getElementById(cat + '-count').textContent = `(${counts[cat]})`;
+      });
+    }
+
+    // Initialize
+    updateStats();
+  </script>
+</body>
+</html>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pied Piper Dashboard</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen;
+            background: #0f1419; 
+            color: #e6edf3; 
+            padding: 20px;
+        }
+        .header { text-align: center; margin-bottom: 30px; }
+        .header h1 { color: #22d3ee; margin-bottom: 8px; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .section { background: #1c2333; border-radius: 12px; padding: 20px; margin-bottom: 20px; }
+        .section h2 { color: #22d3ee; margin-bottom: 20px; font-size: 1.5rem; }
+        .agent-card { 
+            background: #161b26; 
+            border: 1px solid #30363d; 
+            border-radius: 8px; 
+            padding: 15px; 
+            margin-bottom: 15px;
+        }
+        .team-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+        .upload-section {
+            background: #161b26;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .file-item {
+            background: #21262d;
+            border-radius: 6px;
+            padding: 10px;
+            margin: 5px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .refresh-btn {
+            background: #22d3ee;
+            color: #0f1419;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        .loading { text-align: center; color: #8b949e; }
+        .empty { text-align: center; color: #8b949e; font-style: italic; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🔥 Pied Piper Dashboard</h1>
+        <p>Team Workspace & File Manager</p>
+    </div>
+    
+    <div class="container">
+        <div class="section">
+            <h2>📊 Team Stats</h2>
+            <div id="teamStats" class="loading">Loading data...</div>
+        </div>
+        
+        <div class="section">
+            <h2>👥 Team</h2>
+            <div id="teamGrid" class="team-grid">
+                <div class="loading">Loading team data...</div>
             </div>
-            <div class="flex items-center gap-1.5 mt-2 px-2 py-1 rounded" style="background:${color}15; border-left: 2px solid ${color}">
-              <span class="text-sm">${emoji}</span>
-              <span class="text-[11px] font-semibold" style="color:${color}">${name}</span>
+        </div>
+        
+        <div class="section">
+            <h2>📁 Shared Workspace</h2>
+            <div class="upload-section">
+                <input type="file" id="fileInput" multiple style="width: 100%; margin-bottom: 10px;">
+                <button onclick="uploadFiles()" class="refresh-btn">📤 Upload Files</button>
             </div>
-            <div class="flex items-center gap-2 mt-1.5">
-              <span class="px-1.5 py-0.5 rounded text-[10px] font-medium ${PRIORITY_STYLES[t.priority] || PRIORITY_STYLES.med}">${t.priority}</span>
-              ${t.desc ? `<span class="text-[10px] text-gray-500 truncate" title="${escapeHtml(t.desc)}">📝 ${escapeHtml(t.desc)}</span>` : ''}
+            <div id="fileList">
+                <div class="loading">Loading files...</div>
             </div>
-          </div>`;
-        }).join('')}
-      </div>
-    </div>`;
-  }).join('');
-}
-
-let dragTaskId = null, dragSourceCol = null;
-function handleDragStart(e, taskId, colId) {
-  dragTaskId = taskId;
-  dragSourceCol = colId;
-  e.target.classList.add('dragging');
-  e.dataTransfer.effectAllowed = 'move';
-}
-function handleDrop(e, targetCol) {
-  e.preventDefault();
-  if (!dragTaskId || !dragSourceCol) return;
-  if (dragSourceCol === targetCol) return;
-  const srcArr = sprintData[dragSourceCol];
-  const idx = srcArr.findIndex(t => t.id === dragTaskId);
-  if (idx === -1) return;
-  const [task] = srcArr.splice(idx, 1);
-  sprintData[targetCol].push(task);
-  saveSprint(sprintData);
-  renderSprint();
-  dragTaskId = null;
-  dragSourceCol = null;
-}
-
-// ─── Add Task Modal ───
-function openAddTaskModal() {
-  document.getElementById('task-title').value = '';
-  document.getElementById('task-assignee').value = '';
-  document.getElementById('task-priority').value = 'med';
-  document.getElementById('task-desc').value = '';
-  const modal = document.getElementById('add-task-modal');
-  modal.classList.remove('hidden');
-  modal.classList.add('flex');
-  document.getElementById('task-title').focus();
-}
-function closeAddTaskModal() {
-  const modal = document.getElementById('add-task-modal');
-  modal.classList.add('hidden');
-  modal.classList.remove('flex');
-}
-function addTask() {
-  const title = document.getElementById('task-title').value.trim();
-  if (!title) { document.getElementById('task-title').focus(); return; }
-  const assignee = document.getElementById('task-assignee').value || 'unassigned';
-  const priority = document.getElementById('task-priority').value || 'med';
-  const desc = document.getElementById('task-desc').value.trim();
-  const task = {
-    id: 't' + Date.now(),
-    title,
-    assignee,
-    priority,
-    desc: desc || undefined
-  };
-  sprintData.backlog.push(task);
-  saveSprint(sprintData);
-  renderSprint();
-  closeAddTaskModal();
-}
-// Close modal on backdrop click
-document.getElementById('add-task-modal').addEventListener('click', function(e) {
-  if (e.target === this) closeAddTaskModal();
-});
-// Close modal on Escape
-document.addEventListener('keydown', function(e) {
-  if (e.key === 'Escape') closeAddTaskModal();
-});
-
-// Render sprint board immediately
-renderSprint();
-
-// ─── Dashboard Data ───
-let currentFilter = 'all';
-let currentData = null;
-
-function fmt(n) { return n >= 1000000 ? (n/1000000).toFixed(2)+'M' : n >= 1000 ? (n/1000).toFixed(1)+'K' : String(n); }
-function fmtCost(n) { return '$' + n.toFixed(4); }
-function fmtTime(ms) {
-  if (!ms) return '—';
-  const d = new Date(typeof ms === 'number' ? ms : ms);
-  const now = new Date();
-  const diff = now - d;
-  if (diff < 60000) return 'just now';
-  if (diff < 3600000) return Math.floor(diff/60000) + 'm ago';
-  if (diff < 86400000) return Math.floor(diff/3600000) + 'h ago';
-  return d.toLocaleDateString('en-US', {month:'short', day:'numeric'}) + ' ' + d.toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit'});
-}
-function fmtTimestamp(ts) {
-  if (!ts) return '—';
-  return new Date(ts).toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit', second:'2-digit'});
-}
-function escapeHtml(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
-
-function filterMessages(f) {
-  currentFilter = f;
-  ['all','in','out'].forEach(id => {
-    const btn = document.getElementById('filter-' + id);
-    btn.className = id === f
-      ? 'px-3 py-1 text-xs rounded-full bg-emerald-900/30 text-emerald-400 border border-emerald-800/50'
-      : 'px-3 py-1 text-xs rounded-full bg-gray-800 text-gray-400 border border-gray-700';
-  });
-  if (currentData) renderMessages(currentData);
-}
-
-async function loadData() {
-  try {
-    const resp = await fetch('/api/data?t=' + Date.now());
-    const data = await resp.json();
-    currentData = data;
-    render(data);
-  } catch(e) {
-    console.error('Failed to load data', e);
-  }
-}
-
-function renderMessages(data) {
-  const msgs = (data.messages || []).filter(m => currentFilter === 'all' || m.direction === currentFilter);
-  document.getElementById('messages-feed').innerHTML = msgs.length ? msgs.slice(0, 50).map(m => {
-    const color = AGENT_COLORS[m.agent_id] || '#6b7280';
-    const emoji = AGENT_EMOJI[m.agent_id] || '🤖';
-    const isIn = m.direction === 'in';
-    return `<div class="msg-${m.direction} pl-3 py-2 pr-2 bg-gray-900/50 rounded-lg fade-in">
-      <div class="flex items-center gap-2 mb-1">
-        <span class="text-sm">${emoji}</span>
-        <span class="text-xs font-medium" style="color:${color}">${(m.agent||'').split(' ')[0]}</span>
-        <span class="px-1.5 py-0.5 rounded text-[10px] font-medium ${isIn ? 'bg-blue-900/40 text-blue-400' : 'bg-emerald-900/40 text-emerald-400'}">${isIn ? '← IN' : '→ OUT'}</span>
-        <span class="text-[10px] text-gray-500 ml-auto mono">${fmtTimestamp(m.timestamp)}</span>
-      </div>
-      <p class="text-xs text-gray-400 leading-relaxed truncate">${escapeHtml(m.preview || '')}</p>
-    </div>`;
-  }).join('') : '<p class="text-gray-500 text-sm text-center py-8">No messages yet.</p>';
-}
-
-function render(data) {
-  const now = new Date(data.generated_at);
-  document.getElementById('last-updated').textContent = 'Updated ' + now.toLocaleTimeString();
-
-  // Cost bar
-  const totalInput = data.agents.reduce((s,a) => s + a.total_input + a.total_cache_read, 0);
-  const totalOutput = data.agents.reduce((s,a) => s + a.total_output, 0);
-  const totalCost = data.agents.reduce((s,a) => s + a.total_cost, 0);
-  const totalSessions = data.agents.reduce((s,a) => s + a.session_count, 0);
-  const totalMsgIn = data.agents.reduce((s,a) => s + (a.msg_in||0), 0);
-  const totalMsgOut = data.agents.reduce((s,a) => s + (a.msg_out||0), 0);
-
-  document.getElementById('cost-bar').innerHTML = [
-    metricCard('Total Cost', fmtCost(totalCost), `${totalMsgIn + totalMsgOut} total messages`),
-    metricCard('Input Tokens', fmt(totalInput), '$' + ((totalInput / 1e6) * 15).toFixed(2) + ' est.'),
-    metricCard('Output Tokens', fmt(totalOutput), '$' + ((totalOutput / 1e6) * 75).toFixed(2) + ' est.'),
-    metricCard('Active Sessions', String(totalSessions), data.agents.filter(a=>a.status==='active').length + ' agents online'),
-  ].join('');
-
-  // Agent cards
-  document.getElementById('agent-cards').innerHTML = data.agents.map(a => {
-    const color = AGENT_COLORS[a.id] || '#6b7280';
-    const emoji = AGENT_EMOJI[a.id] || '🤖';
-    const contextPct = Math.min(100, (a.context_used / a.context_max * 100));
-    const channels = (a.channels || []).map(c => `<span class="px-1.5 py-0.5 bg-gray-800 rounded text-[10px]">${c}</span>`).join(' ');
-    return `
-    <div class="bg-pp-card border border-pp-border rounded-xl p-4 glow hover:border-gray-600 transition-colors">
-      <div class="flex items-center justify-between mb-3">
-        <div class="flex items-center gap-2">
-          <span class="text-xl">${emoji}</span>
-          <div>
-            <div class="font-semibold text-white text-sm">${a.name}</div>
-            <div class="text-xs text-gray-500 mono">${a.model}</div>
-          </div>
         </div>
-        <div class="w-2.5 h-2.5 rounded-full status-${a.status} ${a.status==='active'?'pulse':''}"></div>
-      </div>
-      <div class="space-y-2 text-xs">
-        <div class="flex justify-between text-gray-400"><span>Input</span><span class="mono text-gray-300">${fmt(a.total_input + a.total_cache_read)}</span></div>
-        <div class="flex justify-between text-gray-400"><span>Output</span><span class="mono text-gray-300">${fmt(a.total_output)}</span></div>
-        <div class="flex justify-between text-gray-400"><span>Cost</span><span class="mono text-emerald-400">${fmtCost(a.total_cost)}</span></div>
-        <div class="flex justify-between text-gray-400"><span>Messages</span><span class="mono text-gray-300">${a.msg_in||0}↓ ${a.msg_out||0}↑</span></div>
-        <div>
-          <div class="flex justify-between text-gray-400 mb-1"><span>Context</span><span class="mono">${fmt(a.context_used)}/${fmt(a.context_max)}</span></div>
-          <div class="w-full bg-gray-800 rounded-full h-1.5">
-            <div class="h-1.5 rounded-full transition-all" style="width:${Math.min(contextPct,100)}%;background:${contextPct>80?'#ef4444':contextPct>50?'#f59e0b':color}"></div>
-          </div>
-        </div>
-        <div class="flex justify-between items-center text-gray-400 pt-1 border-t border-pp-border">
-          <span>${a.session_count} sessions</span><span>${fmtTime(a.last_active)}</span>
-        </div>
-        <div class="flex gap-1 flex-wrap">${channels}</div>
-      </div>
-    </div>`;
-  }).join('');
+    </div>
 
-  // Team bios with live data
-  renderTeamBios(data.agents);
-
-  // Messages feed
-  renderMessages(data);
-
-  // Message counts per agent
-  document.getElementById('msg-counts').innerHTML = data.agents.map(a => {
-    const color = AGENT_COLORS[a.id] || '#6b7280';
-    const emoji = AGENT_EMOJI[a.id] || '🤖';
-    const maxMsg = Math.max(...data.agents.map(x => (x.msg_in||0) + (x.msg_out||0)), 1);
-    return `<div>
-      <div class="flex items-center justify-between mb-1">
-        <span class="text-xs flex items-center gap-1"><span>${emoji}</span> ${(a.name||'').split(' ')[0]}</span>
-        <span class="text-xs mono text-gray-400">${a.msg_in||0}↓ ${a.msg_out||0}↑</span>
-      </div>
-      <div class="w-full bg-gray-800 rounded-full h-2 flex overflow-hidden">
-        <div class="h-2 bg-blue-500 transition-all" style="width:${(a.msg_in||0)/maxMsg*100}%"></div>
-        <div class="h-2 bg-emerald-500 transition-all" style="width:${(a.msg_out||0)/maxMsg*100}%"></div>
-      </div>
-    </div>`;
-  }).join('');
-
-  // Channels
-  const allChannels = {};
-  data.agents.forEach(a => {
-    (a.channels || []).forEach(ch => {
-      if (!allChannels[ch]) allChannels[ch] = [];
-      allChannels[ch].push((a.name||'').split(' ')[0]);
-    });
-  });
-  document.getElementById('channels-list').innerHTML = Object.entries(allChannels).map(([ch, agents]) =>
-    `<div class="flex items-center justify-between py-1.5 border-b border-pp-border/50 last:border-0">
-      <span class="text-xs font-medium text-gray-300">📡 ${ch}</span>
-      <div class="flex gap-1">${agents.map(a => `<span class="px-2 py-0.5 bg-gray-800 rounded text-[10px] text-gray-400">${a}</span>`).join('')}</div>
-    </div>`
-  ).join('') || '<p class="text-gray-500 text-xs">No channels detected.</p>';
-
-  // Session table
-  document.getElementById('session-table').innerHTML = (data.sessions||[]).slice(0, 30).map(s => {
-    const color = AGENT_COLORS[s.agent_id] || '#6b7280';
-    return `<tr class="border-b border-pp-border/50 hover:bg-white/5">
-      <td class="py-2 px-3"><span class="inline-block w-2 h-2 rounded-full mr-2" style="background:${color}"></span>${(s.agent||'').split(' ')[0]}</td>
-      <td class="py-2 px-3 mono text-xs text-gray-400" title="${escapeHtml(s.key||'')}">${(s.key||'').length > 40 ? (s.key||'').slice(0,40)+'…' : s.key||''}</td>
-      <td class="py-2 px-3"><span class="px-2 py-0.5 bg-gray-800 rounded text-xs">${(s.channel||'').split(':')[0]}</span></td>
-      <td class="py-2 px-3 text-gray-400">${fmtTime(s.updated_at)}</td>
-      <td class="py-2 px-3 text-right mono">${fmt(s.tokens||0)}</td>
-    </tr>`;
-  }).join('');
-
-  // Timeline
-  document.getElementById('timeline').innerHTML = (data.timeline||[]).slice(0, 25).map(t => {
-    const color = AGENT_COLORS[t.agent_id] || '#6b7280';
-    return `<div class="flex gap-3 items-start">
-      <div class="flex flex-col items-center mt-1">
-        <div class="w-2 h-2 rounded-full" style="background:${color}"></div>
-        <div class="w-px h-full bg-pp-border"></div>
-      </div>
-      <div class="flex-1 pb-1">
-        <div class="flex items-center gap-2 mb-0.5">
-          <span class="text-xs font-medium" style="color:${color}">${(t.agent||'').split(' ')[0]}</span>
-          <span class="text-xs text-gray-500">${fmtTimestamp(t.timestamp)}</span>
-        </div>
-        <p class="text-xs text-gray-400 leading-relaxed">${escapeHtml(t.preview||'')}</p>
-      </div>
-    </div>`;
-  }).join('');
-
-  // Cron
-  document.getElementById('cron-runs').innerHTML = (data.cron_runs||[]).length ? data.cron_runs.map(c => {
-    const isErr = c.status === 'error';
-    return `<div class="flex items-center gap-3 text-xs p-2 rounded-lg ${isErr ? 'bg-red-900/20' : 'bg-emerald-900/20'}">
-      <span class="${isErr ? 'text-red-400' : 'text-emerald-400'}">${isErr ? '✗' : '✓'}</span>
-      <span class="text-gray-300 flex-1">${escapeHtml(c.summary || c.action || 'run')}</span>
-      <span class="text-gray-500 mono">${c.durationMs ? (c.durationMs/1000).toFixed(1)+'s' : ''}</span>
-      <span class="text-gray-500">${fmtTime(c.ts)}</span>
-    </div>`;
-  }).join('') : '<p class="text-gray-500 text-sm">No cron runs found.</p>';
-}
-
-function metricCard(label, value, sub) {
-  return `<div class="bg-pp-card border border-pp-border rounded-xl p-4">
-    <div class="text-xs text-gray-400 mb-1">${label}</div>
-    <div class="text-2xl font-bold text-white mono">${value}</div>
-    <div class="text-xs text-gray-500 mt-1">${sub}</div>
-  </div>`;
-}
-
-loadData();
-setInterval(loadData, 30000);
-</script>
+    <script>
+        const API_BASE = '/';
+        
+        function fmt(n) {
+            return n > 1000000 ? (n/1000000).toFixed(1) + 'M' : 
+                   n > 1000 ? (n/1000).toFixed(1) + 'K' : n.toString();
+        }
+        
+        async function loadData() {
+            try {
+                const [stats, files] = await Promise.all([
+                    fetch(`${API_BASE}api/stats`).then(r => r.json()),
+                    fetch(`${API_BASE}api/files`).then(r => r.json())
+                ]);
+                
+                // Team stats
+                const teamStats = stats.team || {};
+                document.getElementById('teamStats').innerHTML = `
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                        <div><strong>Total Cost:</strong> $${teamStats.totalCost?.toFixed(4) || '0.0000'}</div>
+                        <div><strong>Total Tokens:</strong> ${fmt(teamStats.totalTokens || 0)}</div>
+                        <div><strong>Total Messages:</strong> ${fmt(teamStats.totalMessages || 0)}</div>
+                    </div>
+                `;
+                
+                // Team cards
+                const agents = stats.agents || [];
+                document.getElementById('teamGrid').innerHTML = agents.map(agent => `
+                    <div class="agent-card">
+                        <h3 style="color: #22d3ee; margin-bottom: 8px;">${agent.agent}</h3>
+                        <div>Migrated data ✨</div>
+                        <div>Cost: $${agent.totalCost?.toFixed(4) || '0.0000'}</div>
+                        <div>Messages: ${agent.totalMessages || 0}</div>
+                        <div>Files: Ready for upload</div>
+                    </div>
+                `).join('') || '<div class="empty">No agent data available</div>';
+                
+                // Files list
+                const files = files.files || [];
+                document.getElementById('fileList').innerHTML = files.map(file => `
+                    <div class="file-item">
+                        <span>📁 ${file.name}</span>
+                        <span>${(file.size/1024).toFixed(1)} KB</span>
+                        <a href="${API_BASE}api/files/${encodeURIComponent(file.name)}" style="color: #22d3ee;">Download</a>
+                    </div>
+                `).join('') || '<div class="empty">No files uploaded yet. Drag files above to add work.</div>';
+                
+            } catch (error) {
+                console.error('Error loading data:', error);
+                document.getElementById('teamStats').innerHTML = '<div class="empty">Error loading data - agents may not be active</div>';
+            }
+        }
+        
+        async function uploadFiles() {
+            const files = document.getElementById('fileInput').files;
+            const formData = new FormData();
+            
+            for (let file of files) {
+                formData.append('file', file);
+            }
+            
+            try {
+                await fetch(`${API_BASE}api/upload`, {method: 'POST', body: formData});
+                document.getElementById('fileInput').value = '';
+                loadData();
+            } catch (error) {
+                alert('Upload failed');
+            }
+        }
+        
+        // Load data immediately
+        loadData();
+        setInterval(loadData, 30000); // Auto-refresh every 30 seconds
+    </script>
 </body>
 </html>

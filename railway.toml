@@ -1,0 +1,3 @@
+Port=8080
+python_command=python3
+workers=4

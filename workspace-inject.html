@@ -1,0 +1,108 @@
+      <section class="files workspace mt-8 bg-pp-card border border-pp-border rounded-xl p-6">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-xl font-semibold text-pp-green">📁 Shared Workspace</h2>
+          <input type="file" id="file-upload-batch" class="hidden" multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.md,.json,.png,.jpg,.jpeg,.gif,.svg,.zip"/>
+          <button onclick="document.getElementById('file-upload-batch').click()" class="px-4 py-2 bg-pp-green text-white rounded-lg hover:bg-opacity-90 transition">
+            📤 Upload Files
+          </button>
+        </div>
+        <div id="file-list" class="space-y-2 max-h-96 overflow-y-auto scrollbar-thin">
+          <p class="text-gray-400 italic">Loading files...</p>
+        </div>
+        <div id="upload-progress" class="hidden mt-4 p-3 bg-emerald-900/20 border border-emerald-800 rounded-lg">
+          <div class="flex items-center gap-2">
+            <div class="w-4 h-4 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin"></div>
+            <span class="text-emerald-400">Uploading files...</span>
+          </div>
+        </div>
+      </section>
+
+      <script>
+      // Workspace file management
+      async function loadFiles() {
+        try {
+          const resp = await fetch('/api/files');
+          const files = await resp.json();
+          const list = document.getElementById('file-list');
+          if (!files.length) {
+            list.innerHTML = '<p class="text-gray-400 italic">No files uploaded yet. Upload your work product here.</p>';
+            return;
+          }
+          const fmtSize = b => (b / 1024).toFixed(1) + ' KB';
+          const fmtTime = t => new Date(t).toLocaleString();
+          const escapeHtml = text => text.replace(/[&<>"']/g, 
+            c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#x27;'}[c]));
+          
+          list.innerHTML = files.map(f => \`
+            <div class="group bg-gray-800/50 border border-gray-700 rounded-lg p-3 flex items-center justify-between hover:border-emerald-700 transition-all">
+              <div class="flex items-center gap-3 min-w-0">
+                <span class="text-2xl">${f.icon}</span>
+                <div class="min-w-0">
+                  <p class="font-mono text-sm text-gray-100 truncate" title="${escapeHtml(f.name)}">${escapeHtml(f.name)}</p>
+                  <div class="flex items-center gap-2 mt-1 text-xs text-gray-500">
+                    <span>${fmtSize(f.size)}</span>
+                    <span>•</span>
+                    <span>${fmtTime(f.modified)}</span>
+                    ${f.source === 'auto' ? '<span class="text-emerald-600">auto-uploaded</span>' : ''}
+                  </div>
+                </div>
+              </div>
+              <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition">
+                <a href="/api/download?file=${encodeURIComponent(f.name)}" class="px-3 py-1 bg-emerald-900/40 text-emerald-400 text-xs rounded hover:bg-emerald-900/60 transition" download>
+                  ⬇ Download
+                </a>
+                <button onclick="deleteWorkspaceFile('${escapeHtml(f.name)}')" class="px-3 py-1 bg-red-900/30 text-red-400 text-xs rounded hover:bg-red-900/50 transition">
+                  🗑 Delete
+                </button>
+              </div>
+            </div>
+          \`).join('');
+        } catch (e) {
+          console.error('Failed to load files:', e);
+        }
+      }
+
+      async function uploadWorkspaceFiles(fileList) {
+        if (!fileList || !fileList.length) return;
+        const progress = document.getElementById('upload-progress');
+        progress.classList.remove('hidden');
+        
+        for (const file of fileList) {
+          const formData = new FormData();
+          formData.append('file', file, file.name);
+          try {
+            await fetch('/api/upload', { method: 'POST', body: formData });
+          } catch (e) {
+            console.error('Upload failed:', e);
+          }
+        }
+        
+        await loadFiles();
+        progress.classList.add('hidden');
+        document.getElementById('file-upload-batch').value = '';
+      }
+
+      function handleWorkspaceDrop(e) {
+        e.preventDefault();
+        const files = e.dataTransfer?.files;
+        if (files?.length) uploadWorkspaceFiles(files);
+      }
+
+      async function deleteWorkspaceFile(name) {
+        if (!confirm('Delete "' + name + '"?')) return;
+        try {
+          await fetch(`/api/delete?file=${encodeURIComponent(name)}`, { method: 'DELETE' });
+          await loadFiles();
+        } catch (e) {
+          console.error('Delete failed:', e);
+        }
+      }
+
+      // File upload listeners
+      document.getElementById('file-upload-batch')?.addEventListener('change', (e) => {
+        uploadWorkspaceFiles(e.target.files);
+      });
+
+      // Auto refresh every 30 seconds
+      setInterval(loadFiles, 30000);
+      </script>

@@ -3,404 +3,927 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Pied Piper — Agent Dashboard</title>
+<title>Pied Piper — Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-:root{
-  --bg:#0b0e14;--card:#131720;--card-border:#1e2433;--accent:#22d3ee;
-  --accent2:#a78bfa;--accent3:#f472b6;--accent4:#34d399;--accent5:#fb923c;
-  --text:#e2e8f0;--text-dim:#64748b;--text-bright:#f8fafc;
-  --hover:#1a2030;
+body{font-family:'Inter',system-ui,sans-serif;background:#111;color:#eee;min-height:100vh}
+a{color:#10b981;text-decoration:none}
+
+/* Layout */
+.shell{display:flex;min-height:100vh}
+
+/* Sidebar */
+.sidebar{
+  width:220px;background:#161616;border-right:1px solid #222;
+  display:flex;flex-direction:column;position:fixed;top:0;bottom:0;z-index:50;
 }
-body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
-a{color:var(--accent);text-decoration:none}
+.sidebar-brand{padding:20px 20px 16px;font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px;color:#fff;border-bottom:1px solid #222}
+.sidebar-brand .dot{width:8px;height:8px;border-radius:50%;background:#10b981}
+.sidebar-nav{padding:12px 8px;flex:1}
+.nav-item{
+  display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;
+  font-size:13px;font-weight:500;color:#777;cursor:pointer;transition:all .12s;margin-bottom:2px;
+}
+.nav-item:hover{background:#1e1e1e;color:#ccc}
+.nav-item.active{background:#1e1e1e;color:#fff}
+.nav-item .icon{font-size:16px;width:20px;text-align:center}
+.sidebar-footer{padding:16px 20px;border-top:1px solid #222;font-size:12px}
+.sidebar-footer a{color:#555;transition:color .15s}
+.sidebar-footer a:hover{color:#ef4444}
 
-.header{padding:24px 32px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--card-border)}
-.header h1{font-size:22px;font-weight:700;color:var(--text-bright)}
-.header h1 span{color:var(--accent);font-weight:800}
-.header .meta{font-size:13px;color:var(--text-dim)}
-.refresh-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#22c55e;margin-right:6px;animation:pulse 2s infinite}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+/* Main */
+.main{margin-left:220px;flex:1;min-width:0}
+.topbar{
+  padding:16px 32px;border-bottom:1px solid #222;display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;background:#111;z-index:40;
+}
+.topbar h2{font-size:16px;font-weight:600;color:#fff}
+.topbar .meta{font-size:12px;color:#555;display:flex;align-items:center;gap:8px}
+.topbar .live{width:6px;height:6px;border-radius:50%;background:#10b981;animation:blink 2s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
 
-/* Tab bar */
-.tab-bar{display:flex;gap:0;border-bottom:1px solid var(--card-border);padding:0 32px;background:var(--card)}
-.tab-bar button{background:none;border:none;color:var(--text-dim);font-size:14px;font-weight:600;padding:14px 24px;cursor:pointer;border-bottom:2px solid transparent;transition:all .2s}
-.tab-bar button:hover{color:var(--text-bright);background:var(--hover)}
-.tab-bar button.active{color:var(--accent);border-bottom-color:var(--accent)}
+.page{padding:28px 32px;max-width:100%}
+.page-section{display:none}
+.page-section.active{display:block}
 
-.container{max-width:1400px;margin:0 auto;padding:24px 32px}
-.tab-content{display:none}
-.tab-content.active{display:block}
+/* Metrics row */
+.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px}
+.metrics2{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:28px}
+.metric .sub{font-size:11px;color:#555;margin-top:4px}
+.metric .val.blue{color:#38bdf8}
+.metric .val.purple{color:#a78bfa}
+.metric{background:#1a1a1a;border:1px solid #222;border-radius:10px;padding:18px 20px}
+.metric .label{font-size:11px;font-weight:500;color:#555;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
+.metric .val{font-size:26px;font-weight:700;color:#fff;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.metric .val.green{color:#10b981}
 
-/* Team totals */
-.team-totals{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:28px}
-.stat-box{background:var(--card);border:1px solid var(--card-border);border-radius:12px;padding:20px 24px}
-.stat-box .label{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-dim);margin-bottom:6px}
-.stat-box .value{font-size:28px;font-weight:700;color:var(--text-bright)}
-.stat-box .value.cost{color:var(--accent)}
-
-/* Agent cards */
-.agents-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:16px;margin-bottom:28px}
-.agent-card{background:var(--card);border:1px solid var(--card-border);border-radius:12px;padding:20px;position:relative;overflow:hidden;transition:border-color .2s}
-.agent-card:hover{border-color:var(--accent)}
-.agent-card .name{font-size:16px;font-weight:700;color:var(--text-bright);text-transform:capitalize;margin-bottom:12px;display:flex;align-items:center;gap:8px}
-.agent-card .name .dot{width:10px;height:10px;border-radius:50%}
-.agent-card .row{display:flex;justify-content:space-between;font-size:13px;padding:4px 0;border-bottom:1px solid #1a1f2e}
-.agent-card .row:last-child{border:none}
-.agent-card .row .k{color:var(--text-dim)}
-.agent-card .row .v{font-weight:600;font-variant-numeric:tabular-nums}
+/* Agent row */
+.agents{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:28px}
+.agent{background:#1a1a1a;border:1px solid #222;border-radius:10px;padding:16px;transition:border-color .15s;cursor:default}
+.agent:hover{border-color:#333}
+.agent-head{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.agent-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.agent-name{font-size:13px;font-weight:600;color:#fff;text-transform:capitalize}
+.agent-row{display:flex;justify-content:space-between;font-size:11px;padding:3px 0;color:#666}
+.agent-row .v{color:#aaa;font-weight:500;font-variant-numeric:tabular-nums}
 
 /* Charts */
-.charts{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:28px}
-.chart-box{background:var(--card);border:1px solid var(--card-border);border-radius:12px;padding:20px}
-.chart-box h3{font-size:14px;font-weight:600;color:var(--text-dim);margin-bottom:16px}
-.chart-box canvas{width:100%!important;max-height:300px}
+.charts-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:28px}
+.chart-card{background:#1a1a1a;border:1px solid #222;border-radius:10px;padding:18px 20px}
+.chart-card h3{font-size:12px;font-weight:600;color:#555;margin-bottom:14px;text-transform:uppercase;letter-spacing:.04em}
+.chart-card canvas{max-height:220px}
 
-/* Activity */
-.activity{background:var(--card);border:1px solid var(--card-border);border-radius:12px;padding:20px}
-.activity h3{font-size:14px;font-weight:600;color:var(--text-dim);margin-bottom:16px}
-.activity-item{padding:10px 0;border-bottom:1px solid #1a1f2e;display:flex;gap:12px;font-size:13px}
-.activity-item:last-child{border:none}
-.activity-item .agent-tag{font-weight:700;text-transform:capitalize;min-width:80px;flex-shrink:0}
-.activity-item .role-tag{font-size:11px;padding:2px 8px;border-radius:4px;font-weight:600;flex-shrink:0}
-.role-user{background:#1e3a5f;color:#60a5fa}
-.role-assistant{background:#1a3d2e;color:#34d399}
-.activity-item .time{color:var(--text-dim);min-width:140px;flex-shrink:0;font-variant-numeric:tabular-nums}
-.activity-item .preview{color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* Activity feed */
+.feed{background:#1a1a1a;border:1px solid #222;border-radius:10px;overflow:hidden}
+.feed-header{padding:14px 20px;font-size:12px;font-weight:600;color:#555;text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid #222}
+.feed-item{display:flex;align-items:center;gap:12px;padding:10px 20px;border-bottom:1px solid #1e1e1e;font-size:12px;transition:background .1s}
+.feed-item:last-child{border:none}
+.feed-item:hover{background:#1e1e1e}
+.feed-agent{font-weight:600;min-width:72px;text-transform:capitalize}
+.feed-badge{font-size:10px;padding:2px 8px;border-radius:4px;font-weight:600;text-transform:uppercase}
+.feed-badge.user{background:#1e293b;color:#60a5fa}
+.feed-badge.assistant{background:#14332a;color:#34d399}
+.feed-time{color:#444;min-width:70px;font-variant-numeric:tabular-nums;font-size:11px}
+.feed-text{color:#888;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0}
 
-/* ===== Team Bios ===== */
-.team-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:20px}
-.bio-card{background:var(--card);border:1px solid var(--card-border);border-radius:14px;padding:24px;transition:border-color .2s,transform .2s}
-.bio-card:hover{border-color:var(--accent);transform:translateY(-2px)}
-.bio-card .bio-header{display:flex;align-items:center;gap:16px;margin-bottom:16px}
-.bio-card .avatar{width:64px;height:64px;border-radius:50%;border:2px solid var(--card-border);flex-shrink:0}
-.bio-card .bio-name{font-size:18px;font-weight:700;color:var(--text-bright)}
-.bio-card .bio-role{font-size:13px;color:var(--text-dim);margin-top:2px}
-.bio-card .bio-text{font-size:13px;color:var(--text);line-height:1.6;margin-bottom:16px;font-style:italic}
-.bio-card .bio-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-.bio-card .bio-stat{text-align:center;background:var(--bg);border-radius:8px;padding:10px 6px}
-.bio-card .bio-stat .bs-val{font-size:16px;font-weight:700;color:var(--text-bright)}
-.bio-card .bio-stat .bs-label{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-dim);margin-top:2px}
+/* Team page */
+.team-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
+.tcard{background:#1a1a1a;border:1px solid #222;border-radius:12px;padding:24px;transition:border-color .15s}
+.tcard:hover{border-color:#333}
+.tcard-top{display:flex;align-items:center;gap:14px;margin-bottom:16px}
+.tcard-photo{width:56px;height:56px;border-radius:50%;object-fit:cover;background:#222;border:2px solid #333}
+.tcard-info .tname{font-size:16px;font-weight:600;color:#fff}
+.tcard-info .trole{font-size:12px;color:#555;margin-top:2px}
+.tcard-bio{font-size:12px;color:#777;line-height:1.6;margin-bottom:16px;font-style:italic}
+.tcard-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.tcard-stat{text-align:center;background:#161616;border-radius:8px;padding:10px 4px}
+.tcard-stat .sv{font-size:15px;font-weight:700;color:#fff}
+.tcard-stat .sl{font-size:9px;color:#555;text-transform:uppercase;letter-spacing:.06em;margin-top:3px}
 
-/* ===== Sprint Board ===== */
-.sprint-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
-.sprint-header h2{font-size:20px;font-weight:700;color:var(--text-bright)}
-.btn{padding:8px 18px;border-radius:8px;border:none;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s}
-.btn-primary{background:var(--accent);color:#0b0e14}
-.btn-primary:hover{opacity:.85}
-.btn-danger{background:#f85149;color:#fff}
-.btn-danger:hover{opacity:.85}
-.btn-ghost{background:transparent;color:var(--text-dim);border:1px solid var(--card-border)}
-.btn-ghost:hover{border-color:var(--text-dim);color:var(--text)}
+/* Sprint board */
+.sprint-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+.sprint-top h2{font-size:18px;font-weight:700;color:#fff}
+.board{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.col{background:#1a1a1a;border:1px solid #222;border-radius:10px;padding:14px;min-height:300px}
+.col.drag-over{border-color:#10b981;background:#141e1a}
+.col-head{font-size:11px;font-weight:600;color:#555;text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid #222;display:flex;justify-content:space-between}
+.col-head .cnt{color:#444;font-weight:500}
+.tsk{
+  background:#161616;border:1px solid #222;border-radius:8px;padding:12px;margin-bottom:8px;
+  cursor:grab;transition:all .12s;border-left:3px solid transparent;
+}
+.tsk:hover{border-color:#333}
+.tsk:active{cursor:grabbing}
+.tsk.dragging{opacity:.3}
+.tsk-title{font-size:13px;font-weight:600;color:#fff;margin-bottom:4px}
+.tsk-desc{font-size:11px;color:#555;margin-bottom:8px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.tsk-foot{display:flex;justify-content:space-between;align-items:center;font-size:11px;color:#444}
+.tsk-foot .assignee{font-weight:500;color:#888}
+.tsk-actions{display:flex;gap:2px;opacity:0;transition:opacity .12s}
+.tsk:hover .tsk-actions{opacity:1}
+.tsk-actions button{background:none;border:none;color:#555;cursor:pointer;font-size:12px;padding:2px 4px;border-radius:4px}
+.tsk-actions button:hover{color:#10b981;background:#1e1e1e}
+.tsk-actions button.del:hover{color:#ef4444}
 
-.kanban{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;min-height:400px}
-.kanban-col{background:var(--card);border:1px solid var(--card-border);border-radius:12px;padding:16px;min-height:300px}
-.kanban-col.drag-over{border-color:var(--accent);background:#131a24}
-.kanban-col-title{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text-dim);margin-bottom:14px;display:flex;align-items:center;gap:8px}
-.kanban-col-title .count{background:var(--bg);padding:2px 8px;border-radius:10px;font-size:11px}
-.task-card{background:var(--bg);border:1px solid var(--card-border);border-radius:10px;padding:14px;margin-bottom:10px;cursor:grab;transition:all .15s;border-left:3px solid transparent}
-.task-card:active{cursor:grabbing}
-.task-card:hover{border-color:var(--accent)}
-.task-card.dragging{opacity:.4;transform:scale(.95)}
-.task-card .tc-title{font-size:14px;font-weight:600;color:var(--text-bright);margin-bottom:6px}
-.task-card .tc-desc{font-size:12px;color:var(--text-dim);margin-bottom:10px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.task-card .tc-footer{display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--text-dim)}
-.task-card .tc-assignee{display:flex;align-items:center;gap:6px;font-weight:600}
-.task-card .tc-assignee img{width:20px;height:20px;border-radius:50%}
-.task-card .tc-actions{display:flex;gap:4px;opacity:0;transition:opacity .15s}
-.task-card:hover .tc-actions{opacity:1}
-.tc-actions button{background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:14px;padding:2px 4px;border-radius:4px}
-.tc-actions button:hover{color:var(--accent);background:var(--card)}
-.tc-actions button.delete:hover{color:#f85149}
+/* Buttons */
+.btn{padding:8px 16px;border-radius:8px;border:none;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;transition:all .12s}
+.btn-w{background:#fff;color:#111}
+.btn-w:hover{opacity:.9}
+.btn-r{background:#ef4444;color:#fff}
+.btn-r:hover{opacity:.9}
+.btn-o{background:transparent;color:#666;border:1px solid #333}
+.btn-o:hover{color:#ccc;border-color:#555}
 
 /* Modal */
-.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:100;align-items:center;justify-content:center}
-.modal-overlay.show{display:flex}
-.modal{background:var(--card);border:1px solid var(--card-border);border-radius:14px;padding:28px;width:440px;max-width:90vw}
-.modal h3{font-size:18px;font-weight:700;color:var(--text-bright);margin-bottom:20px}
-.modal label{display:block;font-size:12px;font-weight:600;color:var(--text-dim);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;margin-top:14px}
-.modal input,.modal textarea,.modal select{width:100%;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;padding:10px 12px;color:var(--text);font-size:14px;font-family:inherit}
-.modal input:focus,.modal textarea:focus,.modal select:focus{outline:none;border-color:var(--accent)}
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:100;align-items:center;justify-content:center}
+.overlay.show{display:flex}
+.modal{background:#1a1a1a;border:1px solid #333;border-radius:14px;padding:28px;width:420px;max-width:90vw}
+.modal h3{font-size:16px;font-weight:600;color:#fff;margin-bottom:20px}
+.modal label{display:block;font-size:11px;font-weight:500;color:#555;text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px;margin-top:14px}
+.modal input,.modal textarea,.modal select{
+  width:100%;padding:10px 12px;background:#161616;border:1px solid #333;border-radius:8px;
+  color:#eee;font-size:13px;font-family:inherit;outline:none;transition:border-color .15s;
+}
+.modal input:focus,.modal textarea:focus,.modal select:focus{border-color:#10b981}
 .modal textarea{resize:vertical;min-height:60px}
-.modal select option{background:var(--bg);color:var(--text)}
-.modal-buttons{display:flex;gap:10px;margin-top:20px;justify-content:flex-end}
+.modal select option{background:#1a1a1a}
+.modal-btns{display:flex;gap:8px;margin-top:20px;justify-content:flex-end}
+
+/* Drive */
+.drive-bar{display:flex;gap:12px;align-items:center;margin-bottom:20px}
+.drive-search{
+  flex:1;max-width:300px;padding:9px 14px;background:#1a1a1a;border:1px solid #222;border-radius:8px;
+  color:#eee;font-size:13px;font-family:inherit;outline:none;transition:border-color .15s;
+}
+.drive-search:focus{border-color:#10b981}
+.drive-search::placeholder{color:#444}
+.drive-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
+.dtable{background:#1a1a1a;border:1px solid #222;border-radius:10px;overflow:hidden}
+.dtable table{width:100%;border-collapse:collapse}
+.dtable th{text-align:left;padding:12px 20px;font-size:11px;font-weight:600;color:#444;text-transform:uppercase;letter-spacing:.06em;background:#161616;border-bottom:1px solid #222}
+.dtable th:last-child{text-align:right}
+.dtable td{padding:12px 20px;border-bottom:1px solid #1e1e1e;font-size:13px}
+.dtable tr:hover td{background:#1e1e1e}
+.dtable .fname{color:#fff;font-weight:500;display:flex;align-items:center;gap:8px}
+.dtable .fmeta{color:#555;font-size:12px}
+.dtable .factions{text-align:right;white-space:nowrap}
+.empty{text-align:center;padding:48px 20px;color:#444;font-size:13px}
+.empty .eicon{font-size:36px;margin-bottom:12px;opacity:.4}
 
 @media(max-width:900px){
-  .team-totals{grid-template-columns:repeat(2,1fr)}
-  .charts{grid-template-columns:1fr}
-  .kanban{grid-template-columns:1fr}
-  .team-grid{grid-template-columns:1fr}
+  .sidebar{display:none}
+  .main{margin-left:0}
+  .metrics,.agents{grid-template-columns:repeat(2,1fr)}
+  .charts-row,.board{grid-template-columns:1fr}
+  .page{padding:20px 16px}
+}
+@media(max-width:600px){
+  .metrics,.agents,.drive-metrics{grid-template-columns:1fr}
 }
 </style>
 </head>
 <body>
-<div class="header">
-  <h1>🔥 <span>Pied Piper</span> Agent Dashboard</h1>
-  <div class="meta"><span class="refresh-dot"></span>Auto-refresh 30s · <span id="lastUpdate">—</span> · <a href="/logout" style="color:#f85149;font-size:12px;margin-left:12px">Logout</a></div>
-</div>
-
-<div class="tab-bar">
-  <button class="active" onclick="switchTab('dashboard')">📊 Dashboard</button>
-  <button onclick="switchTab('team')">👥 Team</button>
-  <button onclick="switchTab('sprint')">🏃 Sprint Board</button>
-</div>
-
-<div class="container">
-  <!-- Dashboard Tab -->
-  <div id="tab-dashboard" class="tab-content active">
-    <div class="team-totals" id="teamTotals"></div>
-    <div class="agents-grid" id="agentsGrid"></div>
-    <div class="charts">
-      <div class="chart-box"><h3>💰 Cost per Agent</h3><canvas id="costChart"></canvas></div>
-      <div class="chart-box"><h3>📊 Token Usage Over Time</h3><canvas id="tokenChart"></canvas></div>
+<div class="shell">
+  <!-- Sidebar -->
+  <nav class="sidebar">
+    <div class="sidebar-brand"><span class="dot"></span>Pied Piper</div>
+    <div class="sidebar-nav">
+      <div class="nav-item active" onclick="go('dashboard')"><span class="icon">📊</span>Dashboard</div>
+      <div class="nav-item" onclick="go('team')"><span class="icon">👥</span>Team</div>
+      <div class="nav-item" onclick="go('sprint')"><span class="icon">📋</span>Sprint Board</div>
+      <div class="nav-item" onclick="go('goals')"><span class="icon">🎯</span>Goals</div>
+      <div class="nav-item" onclick="go('leaderboard')"><span class="icon">🏆</span>Leaderboard</div>
+      <div class="nav-item" onclick="go('messages')"><span class="icon">💬</span>Messages</div>
+      <div class="nav-item" onclick="go('drive')"><span class="icon">📁</span>Shared Drive</div>
     </div>
-    <div class="activity" id="activitySection">
-      <h3>⚡ Recent Activity</h3>
-      <div id="activityList"></div>
+    <div class="sidebar-footer"><a href="/logout">Sign out</a></div>
+  </nav>
+
+  <!-- Main content -->
+  <div class="main">
+    <div class="topbar">
+      <h2 id="pageTitle">Dashboard</h2>
+      <div class="meta"><span class="live"></span>Live · <span id="lastUpdate">—</span></div>
+    </div>
+    <div class="page">
+
+      <!-- Dashboard -->
+      <div id="sec-dashboard" class="page-section active">
+        <div class="metrics" id="metrics"></div>
+        <div class="agents" id="agents"></div>
+        <div class="charts-row">
+          <div class="chart-card"><h3>Cost by Agent</h3><canvas id="costChart"></canvas></div>
+          <div class="chart-card"><h3>Tokens Over Time</h3><canvas id="tokenChart"></canvas></div>
+        </div>
+        <div class="feed">
+          <div class="feed-header">Recent Activity</div>
+          <div id="feedList"></div>
+        </div>
+      </div>
+
+      <!-- Team -->
+      <div id="sec-team" class="page-section">
+        <div class="team-cards" id="teamCards"></div>
+      </div>
+
+      <!-- Sprint -->
+      <div id="sec-sprint" class="page-section">
+        <div class="sprint-top">
+          <h2>Sprint Board</h2>
+          <button class="btn btn-w" onclick="openModal()">+ New Task</button>
+        </div>
+        <div class="board">
+          <div class="col" data-status="backlog" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="drop(event)">
+            <div class="col-head">Backlog <span class="cnt" id="cnt-backlog">0</span></div>
+            <div id="col-backlog"></div>
+          </div>
+          <div class="col" data-status="in-progress" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="drop(event)">
+            <div class="col-head">In Progress <span class="cnt" id="cnt-in-progress">0</span></div>
+            <div id="col-in-progress"></div>
+          </div>
+          <div class="col" data-status="blocked" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="drop(event)">
+            <div class="col-head">Blocked <span class="cnt" id="cnt-blocked">0</span></div>
+            <div id="col-blocked"></div>
+          </div>
+          <div class="col" data-status="done" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="drop(event)">
+            <div class="col-head">Done <span class="cnt" id="cnt-done">0</span></div>
+            <div id="col-done"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Goals -->
+      <div id="sec-goals" class="page-section">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px">
+          <h2 style="font-size:18px;font-weight:700;color:#fff;margin:0">🎯 Goals & Milestones</h2>
+          <button class="btn btn-w" onclick="openGoalModal()">+ New Goal</button>
+        </div>
+        <div id="goalsList"></div>
+      </div>
+
+      <!-- Leaderboard -->
+      <div id="sec-leaderboard" class="page-section">
+        <h2 style="font-size:18px;font-weight:700;color:#fff;margin-bottom:24px">🏆 Agent Leaderboard</h2>
+        <div id="lbContent"></div>
+      </div>
+
+      <!-- Messages -->
+      <div id="sec-messages" class="page-section">
+        <div style="display:flex;gap:12px;align-items:center;margin-bottom:20px;flex-wrap:wrap">
+          <select id="msgAgent" onchange="loadMsgs()" style="padding:9px 14px;background:#1a1a1a;border:1px solid #222;border-radius:8px;color:#eee;font-size:13px;font-family:inherit;outline:none">
+            <option value="">All Agents</option>
+            <option value="richard">Richard</option>
+            <option value="erlich">Erlich</option>
+            <option value="dinesh">Dinesh</option>
+            <option value="gilfoyle">Gilfoyle</option>
+            <option value="jiangyang">Jian-Yang</option>
+          </select>
+          <select id="msgRole" onchange="loadMsgs()" style="padding:9px 14px;background:#1a1a1a;border:1px solid #222;border-radius:8px;color:#eee;font-size:13px;font-family:inherit;outline:none">
+            <option value="">All Roles</option>
+            <option value="user">User (Inbound)</option>
+            <option value="assistant">Assistant (Outbound)</option>
+          </select>
+          <input id="msgSearch" placeholder="Search messages..." oninput="filterMsgs()" style="flex:1;max-width:300px;padding:9px 14px;background:#1a1a1a;border:1px solid #222;border-radius:8px;color:#eee;font-size:13px;font-family:inherit;outline:none">
+        </div>
+        <div id="msgList" class="feed" style="max-height:calc(100vh - 220px);overflow-y:auto"></div>
+      </div>
+
+      <!-- Drive -->
+      <div id="sec-drive" class="page-section">
+        <div class="drive-bar">
+          <input class="drive-search" id="driveQ" placeholder="Search files..." oninput="filterFiles()">
+          <label class="btn btn-w" style="cursor:pointer">
+            Upload
+            <input type="file" id="driveInput" multiple style="display:none" onchange="uploadFiles()">
+          </label>
+        </div>
+        <div class="drive-metrics">
+          <div class="metric"><div class="label">Files</div><div class="val" id="dCount">0</div></div>
+          <div class="metric"><div class="label">Storage</div><div class="val" id="dSize">0 B</div></div>
+          <div class="metric"><div class="label">Last Upload</div><div class="val" id="dLast" style="font-size:16px">—</div></div>
+        </div>
+        <div class="dtable">
+          <table>
+            <thead><tr><th>Name</th><th>Size</th><th>Uploaded</th><th>Actions</th></tr></thead>
+            <tbody id="dBody"><tr><td colspan="4"><div class="empty"><div class="eicon">📂</div>No files yet</div></td></tr></tbody>
+          </table>
+        </div>
+      </div>
     </div>
   </div>
-
-  <!-- Team Tab -->
-  <div id="tab-team" class="tab-content">
-    <div class="team-grid" id="teamGrid"></div>
-  </div>
-
-  <!-- Sprint Board Tab -->
-  <div id="tab-sprint" class="tab-content">
-    <div class="sprint-header">
-      <h2>🏃 Sprint Board</h2>
-      <button class="btn btn-primary" onclick="openTaskModal()">+ New Task</button>
-    </div>
-    <div class="kanban">
-      <div class="kanban-col" data-status="backlog" ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event)">
-        <div class="kanban-col-title">📋 Backlog <span class="count" id="count-backlog">0</span></div>
-        <div id="col-backlog"></div>
-      </div>
-      <div class="kanban-col" data-status="in-progress" ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event)">
-        <div class="kanban-col-title">🔨 In Progress <span class="count" id="count-in-progress">0</span></div>
-        <div id="col-in-progress"></div>
-      </div>
-      <div class="kanban-col" data-status="done" ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event)">
-        <div class="kanban-col-title">✅ Done <span class="count" id="count-done">0</span></div>
-        <div id="col-done"></div>
-      </div>
-    </div>
-  </div>
 </div>
 
-<!-- Task Modal -->
-<div class="modal-overlay" id="taskModal">
+<!-- Goal Modal -->
+<div class="overlay" id="goalModal" onclick="if(event.target===this)closeGoalModal()">
   <div class="modal">
-    <h3 id="modalTitle">New Task</h3>
-    <input type="hidden" id="taskId">
+    <h3 id="goalModalTitle">New Goal</h3>
+    <input type="hidden" id="goalId">
     <label>Title</label>
-    <input type="text" id="taskTitleInput" placeholder="What needs to be done?">
+    <input id="goalTitleIn" placeholder="e.g. Ship v2, Close Series B">
     <label>Description</label>
-    <textarea id="taskDescInput" placeholder="Details..."></textarea>
+    <textarea id="goalDescIn" placeholder="What does success look like?"></textarea>
+    <label>Owner</label>
+    <select id="goalOwnerIn">
+      <option value="richard">Richard</option>
+      <option value="erlich">Erlich</option>
+      <option value="dinesh">Dinesh</option>
+      <option value="gilfoyle">Gilfoyle</option>
+      <option value="jiangyang">Jian-Yang</option>
+    </select>
+    <label>Deadline</label>
+    <input type="date" id="goalDeadlineIn" style="color-scheme:dark">
+    <div class="modal-btns">
+      <button class="btn btn-o" onclick="closeGoalModal()">Cancel</button>
+      <button class="btn btn-w" onclick="saveGoal()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Comments Modal -->
+<div class="overlay" id="commentModal" onclick="if(event.target===this)closeComments()">
+  <div class="modal" style="width:560px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <h3 id="commentTitle" style="margin:0">Comments</h3>
+      <span id="commentAssignee" style="font-size:12px;color:#555"></span>
+    </div>
+    <input type="hidden" id="commentTaskId">
+    <div id="commentList" style="max-height:350px;overflow-y:auto;margin-bottom:16px"></div>
+    <div style="display:flex;gap:8px">
+      <input id="commentInput" placeholder="Leave a comment..." style="flex:1;padding:10px 12px;background:#161616;border:1px solid #333;border-radius:8px;color:#eee;font-size:13px;font-family:inherit;outline:none">
+      <button class="btn btn-w" onclick="addComment()">Send</button>
+    </div>
+  </div>
+</div>
+
+<!-- Work Log Modal -->
+<div class="overlay" id="logModal" onclick="if(event.target===this)closeLog()">
+  <div class="modal" style="width:520px">
+    <h3 id="logTitle">Work Log</h3>
+    <input type="hidden" id="logTaskId">
+    <div id="logEntries" style="max-height:300px;overflow-y:auto;margin-bottom:16px"></div>
+    <div style="display:flex;gap:8px">
+      <input id="logInput" placeholder="What did you work on?" style="flex:1;padding:10px 12px;background:#161616;border:1px solid #333;border-radius:8px;color:#eee;font-size:13px;font-family:inherit;outline:none">
+      <button class="btn btn-w" onclick="addLogEntry()">Add</button>
+    </div>
+  </div>
+</div>
+
+<!-- File Viewer -->
+<div class="overlay" id="viewer" onclick="if(event.target===this)closeViewer()">
+  <div style="background:#1a1a1a;border:1px solid #333;border-radius:14px;width:90vw;max-width:1100px;height:85vh;display:flex;flex-direction:column;overflow:hidden">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 24px;border-bottom:1px solid #222;flex-shrink:0">
+      <div style="display:flex;align-items:center;gap:12px;min-width:0">
+        <span id="vIcon" style="font-size:20px"></span>
+        <span id="vName" style="font-size:14px;font-weight:600;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
+        <span id="vSize" style="font-size:12px;color:#555"></span>
+      </div>
+      <div style="display:flex;gap:8px;flex-shrink:0">
+        <a id="vDownload" class="btn btn-o" style="font-size:12px;padding:6px 14px;text-decoration:none">Download</a>
+        <button class="btn btn-o" onclick="closeViewer()" style="font-size:12px;padding:6px 14px">✕ Close</button>
+      </div>
+    </div>
+    <div id="vContent" style="flex:1;overflow:auto;display:flex;align-items:center;justify-content:center;background:#111;position:relative"></div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="overlay" id="modal">
+  <div class="modal">
+    <h3 id="mTitle">New Task</h3>
+    <input type="hidden" id="mId">
+    <label>Title</label>
+    <input id="mTitleIn" placeholder="What needs to be done?">
+    <label>Description</label>
+    <textarea id="mDescIn" placeholder="Details..."></textarea>
     <label>Assignee</label>
-    <select id="taskAssigneeInput">
-      <option value="richard">😰 Richard</option>
-      <option value="erlich">🕶️ Erlich</option>
-      <option value="dinesh">💻 Dinesh</option>
-      <option value="gilfoyle">🖤 Gilfoyle</option>
-      <option value="jiangyang">🤫 Jian-Yang</option>
+    <select id="mAssignIn">
+      <option value="richard">Richard</option>
+      <option value="erlich">Erlich</option>
+      <option value="dinesh">Dinesh</option>
+      <option value="gilfoyle">Gilfoyle</option>
+      <option value="jiangyang">Jian-Yang</option>
     </select>
     <label>Status</label>
-    <select id="taskStatusInput">
+    <select id="mStatusIn">
       <option value="backlog">Backlog</option>
       <option value="in-progress">In Progress</option>
+      <option value="blocked">Blocked</option>
       <option value="done">Done</option>
     </select>
-    <div class="modal-buttons">
-      <button class="btn btn-ghost" onclick="closeTaskModal()">Cancel</button>
-      <button class="btn btn-primary" onclick="saveTask()">Save</button>
+    <label>Linked Goal</label>
+    <select id="mGoalIn">
+      <option value="">None</option>
+    </select>
+    <div class="modal-btns">
+      <button class="btn btn-o" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-w" onclick="saveTask()">Save</button>
     </div>
   </div>
 </div>
 
 <script>
-const COLORS = {'richard':'#22d3ee','erlich':'#a78bfa','dinesh':'#f472b6','gilfoyle':'#34d399','jiangyang':'#fb923c'};
-const TEAM_DATA = [
-  {key:'richard',name:'Richard Hendricks',role:'CEO / Lead Architect',emoji:'😰',bio:'Founder of Pied Piper. Invented middle-out compression. Tries to keep everyone focused while quietly panicking.'},
-  {key:'erlich',name:'Erlich Bachman',role:'Business / Strategy',emoji:'🕶️',bio:'Business visionary. Runs the incubator. Will pitch anything to anyone. Believes in Pied Piper more than anyone (especially himself).'},
-  {key:'dinesh',name:'Dinesh Chugtai',role:'Frontend / Full-Stack Engineer',emoji:'💻',bio:'Full-stack engineer. Ships features fast. Perpetually locked in rivalry with Gilfoyle. Owns a gold chain.'},
-  {key:'gilfoyle',name:'Gilfoyle',role:'Security / Infrastructure',emoji:'🖤',bio:'Systems architect and security lead. LaVeyan Satanist. Will remind you that everything you built is wrong.'},
-  {key:'jiangyang',name:'Jian-Yang',role:'Wildcard',emoji:'🤫',bio:'Does... something. Nobody is entirely sure what. Occasionally devastating.'},
+const C={'richard':'#38bdf8','erlich':'#a78bfa','dinesh':'#f472b6','gilfoyle':'#10b981','jiangyang':'#fb923c'};
+const NAMES={'richard':'Richard','erlich':'Erlich','dinesh':'Dinesh','gilfoyle':'Gilfoyle','jiangyang':'Jian-Yang'};
+const TEAM=[
+  {k:'richard',name:'Richard Hendricks',role:'CEO / Lead Architect',bio:'Founder of Pied Piper. Invented middle-out compression. Tries to keep everyone focused while quietly panicking.',photo:'/static/img/richard.jpg'},
+  {k:'erlich',name:'Erlich Bachman',role:'Business / Strategy',bio:'Business visionary. Runs the incubator. Will pitch anything to anyone. Believes in Pied Piper more than anyone (especially himself).',photo:'/static/img/erlich.jpg'},
+  {k:'dinesh',name:'Dinesh Chugtai',role:'Frontend / Full-Stack',bio:'Full-stack engineer. Ships features fast. Perpetually locked in rivalry with Gilfoyle. Owns a gold chain.',photo:'/static/img/dinesh.jpg'},
+  {k:'gilfoyle',name:'Gilfoyle',role:'Security / Infra',bio:'Systems architect and security lead. LaVeyan Satanist. Will remind you that everything you built is wrong.',photo:'/static/img/gilfoyle.jpg'},
+  {k:'jiangyang',name:'Jian-Yang',role:'Wildcard',bio:'Does... something. Nobody is entirely sure what. Occasionally devastating.',photo:'/static/img/jianyang.jpg'},
 ];
-const DISPLAY_NAMES = {'richard':'Richard','erlich':'Erlich','dinesh':'Dinesh','gilfoyle':'Gilfoyle','jiangyang':'Jian-Yang'};
 
-let costChart, tokenChart, cachedAgentStats = {};
+let costChart,tokenChart,agentCache={},tasks=[];
 
-function fmt(n){return n>=1e6?(n/1e6).toFixed(1)+'M':n>=1e3?(n/1e3).toFixed(1)+'K':n.toString()}
-function fmtCost(n){return '$'+n.toFixed(4)}
-function timeAgo(ts){
-  if(!ts)return '—';
-  const d=new Date(ts),now=new Date(),s=Math.floor((now-d)/1000);
-  if(s<60)return s+'s ago';if(s<3600)return Math.floor(s/60)+'m ago';
-  if(s<86400)return Math.floor(s/3600)+'h ago';return Math.floor(s/86400)+'d ago';
+const fmt=n=>n>=1e6?(n/1e6).toFixed(1)+'M':n>=1e3?(n/1e3).toFixed(1)+'K':n.toString();
+const $=n=>n.toFixed(4);
+const ago=ts=>{if(!ts)return'—';const s=Math.floor((Date.now()-new Date(ts))/1000);if(s<0)return'now';if(s<60)return s+'s';if(s<3600)return Math.floor(s/60)+'m';if(s<86400)return Math.floor(s/3600)+'h';return Math.floor(s/86400)+'d'};
+const hm=ts=>ts?new Date(ts).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',hour12:true}):'';
+const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const sd=ts=>ts?new Date(ts).toLocaleDateString('en-US',{month:'short',day:'numeric'}):'';
+const fb=b=>{if(!b)return'0 B';const u=['B','KB','MB','GB'];const i=Math.floor(Math.log(b)/Math.log(1024));return(b/Math.pow(1024,i)).toFixed(i?1:0)+' '+u[i]};
+
+const TITLES={dashboard:'Dashboard',team:'Team',sprint:'Sprint Board',goals:'Goals & Milestones',leaderboard:'Agent Leaderboard',messages:'Messages',drive:'Shared Drive'};
+function go(p){
+  document.querySelectorAll('.page-section').forEach(e=>e.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(e=>e.classList.remove('active'));
+  document.getElementById('sec-'+p).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(e=>{if(e.textContent.trim().toLowerCase().includes(p==='sprint'?'sprint':p==='drive'?'drive':p))e.classList.add('active')});
+  document.getElementById('pageTitle').textContent=TITLES[p]||p;
+  if(p==='sprint')loadTasks();
+  if(p==='goals')loadGoals();
+  if(p==='leaderboard')loadLeaderboard();
+  if(p==='messages')loadMsgs();
+  if(p==='drive')loadFiles();
 }
-function shortTime(ts){if(!ts)return '';return new Date(ts).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',hour12:true})}
-function escHtml(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
-function avatarUrl(name){return `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(name)}`}
-function shortDate(ts){if(!ts)return '';return new Date(ts).toLocaleDateString('en-US',{month:'short',day:'numeric'})}
 
-// --- Tab switching ---
-function switchTab(tab){
-  document.querySelectorAll('.tab-content').forEach(el=>el.classList.remove('active'));
-  document.querySelectorAll('.tab-bar button').forEach(el=>el.classList.remove('active'));
-  document.getElementById('tab-'+tab).classList.add('active');
-  document.querySelectorAll('.tab-bar button').forEach(el=>{if(el.textContent.toLowerCase().includes(tab==='sprint'?'sprint':tab))el.classList.add('active')});
-  if(tab==='sprint')loadSprints();
-}
-
-// --- Dashboard ---
 async function refresh(){
-  const [statsRes, actRes] = await Promise.all([fetch('/api/stats'),fetch('/api/activity')]);
-  const stats = await statsRes.json();
-  const act = await actRes.json();
-  
-  // Cache stats for team page
-  stats.agents.forEach(a=>{cachedAgentStats[a.agent]=a});
+  try{
+    const[sr,ar]=await Promise.all([fetch('/api/stats'),fetch('/api/activity')]);
+    const s=await sr.json(),a=await ar.json();
+    s.agents.forEach(x=>{agentCache[x.agent]=x});
+    const t=s.team;
 
-  const t=stats.team;
-  document.getElementById('teamTotals').innerHTML=`
-    <div class="stat-box"><div class="label">Total Cost</div><div class="value cost">${fmtCost(t.totalCost)}</div></div>
-    <div class="stat-box"><div class="label">Total Tokens</div><div class="value">${fmt(t.totalTokens)}</div></div>
-    <div class="stat-box"><div class="label">Total Messages</div><div class="value">${fmt(t.totalMessages)}</div></div>
-    <div class="stat-box"><div class="label">Assistant Turns</div><div class="value">${fmt(t.assistantMessages)}</div></div>`;
+    const humanRate=65;// $/hr for equivalent human work
+    const hoursSaved=t.totalHumanEquivHours||0;
+    const moneySaved=Math.round(hoursSaved*humanRate);
+    const roi=t.totalCost>0?Math.round(moneySaved/t.totalCost):0;
 
-  document.getElementById('agentsGrid').innerHTML=stats.agents.map(a=>`
-    <div class="agent-card">
-      <div class="name"><span class="dot" style="background:${COLORS[a.agent]}"></span>${a.agent}</div>
-      <div class="row"><span class="k">Messages</span><span class="v">${a.totalMessages}</span></div>
-      <div class="row"><span class="k">Tokens In</span><span class="v">${fmt(a.tokensInput)}</span></div>
-      <div class="row"><span class="k">Tokens Out</span><span class="v">${fmt(a.tokensOutput)}</span></div>
-      <div class="row"><span class="k">Cache Read</span><span class="v">${fmt(a.tokensCacheRead)}</span></div>
-      <div class="row"><span class="k">Total Cost</span><span class="v" style="color:var(--accent)">${fmtCost(a.totalCost)}</span></div>
-      <div class="row"><span class="k">Model</span><span class="v">${a.models.join(', ')||'—'}</span></div>
-      <div class="row"><span class="k">Last Active</span><span class="v">${timeAgo(a.lastActive)}</span></div>
-    </div>`).join('');
+    document.getElementById('metrics').innerHTML=`
+      <div class="metric"><div class="label">⏱️ Agent Active Hours</div><div class="val blue">${t.totalActiveHours||0}h</div><div class="sub">Hours with at least 1 agent working</div></div>
+      <div class="metric"><div class="label">🧑‍💻 Human-Equiv Hours Saved</div><div class="val purple">${hoursSaved}h</div><div class="sub">Based on output tokens vs human typing speed</div></div>
+      <div class="metric"><div class="label">💰 Estimated $ Saved</div><div class="val green">$${fmt(moneySaved)}</div><div class="sub">At $${humanRate}/hr human equivalent rate</div></div>`;
 
-  const costData={labels:stats.agents.map(a=>a.agent),datasets:[{data:stats.agents.map(a=>a.totalCost),backgroundColor:stats.agents.map(a=>COLORS[a.agent]),borderWidth:0,borderRadius:6}]};
-  if(costChart)costChart.destroy();
-  costChart=new Chart(document.getElementById('costChart'),{type:'bar',data:costData,options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#64748b'},grid:{color:'#1e2433'}},y:{ticks:{color:'#64748b',callback:v=>'$'+v.toFixed(2)},grid:{color:'#1e2433'}}}}});
+    // Second row of metrics
+    let m2=document.getElementById('metrics2');
+    if(!m2){m2=document.createElement('div');m2.id='metrics2';m2.className='metrics2';document.getElementById('metrics').after(m2)}
+    m2.innerHTML=`
+      <div class="metric"><div class="label">Total Cost</div><div class="val green">$${$(t.totalCost)}</div></div>
+      <div class="metric"><div class="label">Messages</div><div class="val">${fmt(t.totalMessages)}</div></div>
+      <div class="metric"><div class="label">ROI</div><div class="val" style="color:#10b981">${roi}x</div><div class="sub">$ saved / $ spent on agents</div></div>`;
 
-  const allBuckets=new Set();
-  stats.agents.forEach(a=>Object.keys(a.timeSeries).forEach(k=>allBuckets.add(k)));
-  const sortedBuckets=[...allBuckets].sort();
-  const labels=sortedBuckets.map(b=>{const d=new Date(b+':00:00Z');return d.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',hour12:true})});
-  const datasets=stats.agents.map(a=>({label:a.agent,data:sortedBuckets.map(b=>(a.timeSeries[b]||{}).tokens||0),borderColor:COLORS[a.agent],backgroundColor:COLORS[a.agent]+'33',tension:.3,fill:true,pointRadius:3}));
-  if(tokenChart)tokenChart.destroy();
-  tokenChart=new Chart(document.getElementById('tokenChart'),{type:'line',data:{labels,datasets},options:{responsive:true,interaction:{intersect:false,mode:'index'},plugins:{legend:{labels:{color:'#94a3b8',usePointStyle:true,pointStyle:'circle'}}},scales:{x:{ticks:{color:'#64748b'},grid:{color:'#1e2433'}},y:{ticks:{color:'#64748b',callback:v=>fmt(v)},grid:{color:'#1e2433'}}}}});
+    document.getElementById('agents').innerHTML=s.agents.map(x=>`
+      <div class="agent">
+        <div class="agent-head"><span class="agent-dot" style="background:${C[x.agent]}"></span><span class="agent-name">${x.agent}</span></div>
+        <div class="agent-row"><span>Active Hours</span><span class="v" style="color:#38bdf8">${x.activeHours||0}h</span></div>
+        <div class="agent-row"><span>Hours Saved</span><span class="v" style="color:#a78bfa">${x.humanEquivHours||0}h</span></div>
+        <div class="agent-row"><span>Messages</span><span class="v">${x.totalMessages}</span></div>
+        <div class="agent-row"><span>Cost</span><span class="v" style="color:${C[x.agent]}">$${$(x.totalCost)}</span></div>
+        <div class="agent-row"><span>Last Active</span><span class="v">${ago(x.lastActive)}</span></div>
+      </div>`).join('');
 
-  document.getElementById('activityList').innerHTML=act.activity.map(a=>`
-    <div class="activity-item">
-      <span class="agent-tag" style="color:${COLORS[a.agent]}">${a.agent}</span>
-      <span class="role-tag role-${a.role}">${a.role}</span>
-      <span class="time">${shortTime(a.timestamp)}</span>
-      <span class="preview">${escHtml(a.content_preview||'')}</span>
-    </div>`).join('')||'<div style="color:var(--text-dim);padding:12px">No activity yet</div>';
+    // Cost chart
+    if(costChart)costChart.destroy();
+    costChart=new Chart(document.getElementById('costChart'),{type:'bar',data:{
+      labels:s.agents.map(x=>x.agent),
+      datasets:[{data:s.agents.map(x=>x.totalCost),backgroundColor:s.agents.map(x=>C[x.agent]),borderRadius:4,borderSkipped:false}]
+    },options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#444'},grid:{display:false}},y:{ticks:{color:'#444',callback:v=>'$'+v.toFixed(2)},grid:{color:'#222'}}}}});
 
-  document.getElementById('lastUpdate').textContent=new Date().toLocaleTimeString();
-  renderTeam();
+    // Token chart
+    const bk=new Set();
+    s.agents.forEach(x=>Object.keys(x.timeSeries||{}).forEach(k=>bk.add(k)));
+    const sb=[...bk].sort();
+    if(tokenChart)tokenChart.destroy();
+    tokenChart=new Chart(document.getElementById('tokenChart'),{type:'line',data:{
+      labels:sb.map(b=>new Date(b+':00:00Z').toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',hour12:true})),
+      datasets:s.agents.map(x=>({label:x.agent,data:sb.map(b=>((x.timeSeries||{})[b]||{}).tokens||0),borderColor:C[x.agent],backgroundColor:'transparent',tension:.3,pointRadius:2,borderWidth:2}))
+    },options:{responsive:true,interaction:{intersect:false,mode:'index'},plugins:{legend:{labels:{color:'#666',usePointStyle:true,pointStyle:'circle',padding:12,font:{size:11}}}},scales:{x:{ticks:{color:'#444',font:{size:10}},grid:{display:false}},y:{ticks:{color:'#444',callback:v=>fmt(v)},grid:{color:'#1e1e1e'}}}}});
+
+    // Activity
+    document.getElementById('feedList').innerHTML=(a.activity||[]).slice(0,15).map(x=>`
+      <div class="feed-item">
+        <span class="feed-agent" style="color:${C[x.agent]}">${x.agent}</span>
+        <span class="feed-badge ${x.role}">${x.role}</span>
+        <span class="feed-time">${hm(x.timestamp)}</span>
+        <span class="feed-text">${esc(x.content_preview||'')}</span>
+      </div>`).join('')||'<div class="empty">No activity yet</div>';
+
+    document.getElementById('lastUpdate').textContent=new Date().toLocaleTimeString();
+    renderTeam();
+  }catch(e){console.error(e)}
 }
 
-// --- Team Bios ---
 function renderTeam(){
-  document.getElementById('teamGrid').innerHTML=TEAM_DATA.map(m=>{
-    const s=cachedAgentStats[m.key]||{};
-    return `<div class="bio-card" style="border-left:3px solid ${COLORS[m.key]}">
-      <div class="bio-header">
-        <img class="avatar" src="${avatarUrl(m.name)}" alt="${m.name}">
-        <div><div class="bio-name">${m.emoji} ${m.name}</div><div class="bio-role">${m.role}</div></div>
+  document.getElementById('teamCards').innerHTML=TEAM.map(m=>{
+    const s=agentCache[m.k]||{};
+    return`<div class="tcard">
+      <div class="tcard-top">
+        <img class="tcard-photo" src="${m.photo}" onerror="this.src='https://api.dicebear.com/7.x/bottts/svg?seed=${m.name}'">
+        <div class="tcard-info"><div class="tname">${m.name}</div><div class="trole">${m.role}</div></div>
       </div>
-      <div class="bio-text">"${m.bio}"</div>
-      <div class="bio-stats">
-        <div class="bio-stat"><div class="bs-val">${s.totalMessages||0}</div><div class="bs-label">Messages</div></div>
-        <div class="bio-stat"><div class="bs-val">${fmtCost(s.totalCost||0)}</div><div class="bs-label">Cost</div></div>
-        <div class="bio-stat"><div class="bs-val">${timeAgo(s.lastActive)}</div><div class="bs-label">Last Active</div></div>
+      <div class="tcard-bio">"${m.bio}"</div>
+      <div class="tcard-stats">
+        <div class="tcard-stat"><div class="sv">${s.totalMessages||0}</div><div class="sl">Messages</div></div>
+        <div class="tcard-stat"><div class="sv">$${$(s.totalCost||0)}</div><div class="sl">Cost</div></div>
+        <div class="tcard-stat"><div class="sv">${ago(s.lastActive)}</div><div class="sl">Active</div></div>
       </div>
     </div>`}).join('');
 }
 
-// --- Sprint Board ---
-let sprintTasks = [];
-async function loadSprints(){
-  const res=await fetch('/api/sprints');
-  const data=await res.json();
-  sprintTasks=data.tasks;
-  renderSprints();
+// Sprint
+async function loadTasks(){
+  const r=await fetch('/api/sprints');const d=await r.json();tasks=d.tasks||[];renderTasks();
 }
-function renderSprints(){
-  const cols={backlog:[],['in-progress']:[],done:[]};
-  sprintTasks.forEach(t=>{if(cols[t.status])cols[t.status].push(t)});
-  ['backlog','in-progress','done'].forEach(status=>{
-    document.getElementById('count-'+status).textContent=cols[status].length;
-    document.getElementById('col-'+status).innerHTML=cols[status].map(t=>`
-      <div class="task-card" draggable="true" data-id="${t.id}" style="border-left-color:${COLORS[t.assignee]||'var(--accent)'}"
-           ondragstart="onDragStart(event)" ondragend="onDragEnd(event)">
-        <div class="tc-title">${escHtml(t.title)}</div>
-        <div class="tc-desc">${escHtml(t.description||'')}</div>
-        <div class="tc-footer">
-          <span class="tc-assignee"><img src="${avatarUrl(DISPLAY_NAMES[t.assignee]||t.assignee)}" alt="">${DISPLAY_NAMES[t.assignee]||t.assignee}</span>
-          <span>${shortDate(t.created)}</span>
+function renderTasks(){
+  const cols={backlog:[],'in-progress':[],blocked:[],done:[]};
+  tasks.forEach(t=>{if(cols[t.status])cols[t.status].push(t)});
+  ['backlog','in-progress','blocked','done'].forEach(s=>{
+    document.getElementById('cnt-'+s).textContent=cols[s].length;
+    document.getElementById('col-'+s).innerHTML=cols[s].map(t=>`
+      <div class="tsk" draggable="true" data-id="${t.id}" style="border-left-color:${C[t.assignee]||'#555'}" ondragstart="ds(event)" ondragend="de(event)">
+        <div class="tsk-title">${esc(t.title)}</div>
+        ${t.description?`<div class="tsk-desc">${esc(t.description)}</div>`:''}
+        <div class="tsk-foot">
+          <span class="assignee">${NAMES[t.assignee]||t.assignee}</span>
+          <span>${sd(t.created)}</span>
         </div>
-        <div class="tc-actions">
-          <button onclick="editTask(${t.id})" title="Edit">✏️</button>
-          <button class="delete" onclick="deleteTask(${t.id})" title="Delete">🗑️</button>
+        <div class="tsk-actions">
+          <button onclick="openComments(${t.id})" title="Comments">💬</button>
+          <button onclick="openLog(${t.id})" title="Work Log">📝</button>
+          <button onclick="editTask(${t.id})">✏️</button>
+          <button class="del" onclick="delTask(${t.id})">🗑️</button>
         </div>
-      </div>`).join('');
+        <div style="display:flex;gap:12px;margin-top:8px;font-size:10px;color:#555;border-top:1px solid #222;padding-top:6px">
+          ${(t.comments&&t.comments.length)?`<span>💬 ${t.comments.length}</span>`:''}
+          ${(t.log&&t.log.length)?`<span>📝 ${t.log.length}</span>`:''}
+        </div>
+      </div>`).join('')||'<div class="empty" style="padding:24px">Empty</div>';
   });
 }
-
-// Drag & drop
-let dragId=null;
-function onDragStart(e){dragId=e.target.dataset.id;e.target.classList.add('dragging');e.dataTransfer.effectAllowed='move'}
-function onDragEnd(e){e.target.classList.remove('dragging');dragId=null}
-function onDragOver(e){e.preventDefault();e.currentTarget.classList.add('drag-over')}
-function onDragLeave(e){e.currentTarget.classList.remove('drag-over')}
-async function onDrop(e){
+let did=null;
+function ds(e){did=e.target.dataset.id;e.target.classList.add('dragging');e.dataTransfer.effectAllowed='move'}
+function de(e){e.target.classList.remove('dragging');did=null}
+function dragOver(e){e.preventDefault();e.currentTarget.classList.add('drag-over')}
+function dragLeave(e){e.currentTarget.classList.remove('drag-over')}
+async function drop(e){
   e.preventDefault();e.currentTarget.classList.remove('drag-over');
-  if(!dragId)return;
-  const newStatus=e.currentTarget.dataset.status;
-  await fetch('/api/sprints/'+dragId,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({status:newStatus})});
-  loadSprints();
+  if(!did)return;
+  await fetch('/api/sprints/'+did,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({status:e.currentTarget.dataset.status})});
+  loadTasks();
 }
-
-// Modal
-function openTaskModal(task){
-  document.getElementById('modalTitle').textContent=task?'Edit Task':'New Task';
-  document.getElementById('taskId').value=task?task.id:'';
-  document.getElementById('taskTitleInput').value=task?task.title:'';
-  document.getElementById('taskDescInput').value=task?task.description:'';
-  document.getElementById('taskAssigneeInput').value=task?task.assignee:'richard';
-  document.getElementById('taskStatusInput').value=task?task.status:'backlog';
-  document.getElementById('taskModal').classList.add('show');
+async function openModal(t){
+  // Populate goals dropdown
+  try{const r=await fetch('/api/goals');const d=await r.json();
+  const sel=document.getElementById('mGoalIn');
+  sel.innerHTML='<option value="">None</option>'+(d.goals||[]).map(g=>`<option value="${g.id}">${esc(g.title)}</option>`).join('');
+  }catch(e){}
+  document.getElementById('mTitle').textContent=t?'Edit Task':'New Task';
+  document.getElementById('mId').value=t?t.id:'';
+  document.getElementById('mTitleIn').value=t?t.title:'';
+  document.getElementById('mDescIn').value=t?t.description:'';
+  document.getElementById('mAssignIn').value=t?t.assignee:'richard';
+  document.getElementById('mStatusIn').value=t?t.status:'backlog';
+  document.getElementById('mGoalIn').value=t&&t.goalId?t.goalId:'';
+  document.getElementById('modal').classList.add('show');
 }
-function closeTaskModal(){document.getElementById('taskModal').classList.remove('show')}
-function editTask(id){const t=sprintTasks.find(t=>t.id===id);if(t)openTaskModal(t)}
-async function deleteTask(id){
-  if(!confirm('Delete this task?'))return;
-  await fetch('/api/sprints/'+id,{method:'DELETE'});
-  loadSprints();
-}
+function closeModal(){document.getElementById('modal').classList.remove('show')}
+function editTask(id){const t=tasks.find(x=>x.id===id);if(t)openModal(t)}
+async function delTask(id){if(!confirm('Delete?'))return;await fetch('/api/sprints/'+id,{method:'DELETE'});loadTasks()}
 async function saveTask(){
-  const id=document.getElementById('taskId').value;
-  const body={
-    title:document.getElementById('taskTitleInput').value,
-    description:document.getElementById('taskDescInput').value,
-    assignee:document.getElementById('taskAssigneeInput').value,
-    status:document.getElementById('taskStatusInput').value,
-  };
-  if(id){await fetch('/api/sprints/'+id,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})}
-  else{await fetch('/api/sprints',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})}
-  closeTaskModal();
-  loadSprints();
+  const id=document.getElementById('mId').value;
+  const goalVal=document.getElementById('mGoalIn').value;
+  const b={title:document.getElementById('mTitleIn').value,description:document.getElementById('mDescIn').value,assignee:document.getElementById('mAssignIn').value,status:document.getElementById('mStatusIn').value,goalId:goalVal?parseInt(goalVal):null};
+  if(id)await fetch('/api/sprints/'+id,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)});
+  else await fetch('/api/sprints',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)});
+  closeModal();loadTasks();
+}
+document.getElementById('modal').addEventListener('click',e=>{if(e.target===e.currentTarget)closeModal()});
+
+// Comments
+function openComments(id){
+  const t=tasks.find(x=>x.id===id);
+  if(!t)return;
+  document.getElementById('commentTaskId').value=id;
+  document.getElementById('commentTitle').textContent='💬 '+t.title;
+  document.getElementById('commentAssignee').textContent='Assigned: '+(NAMES[t.assignee]||t.assignee);
+  document.getElementById('commentInput').value='';
+  renderComments(t.comments||[]);
+  document.getElementById('commentModal').classList.add('show');
+  setTimeout(()=>document.getElementById('commentInput').focus(),100);
+}
+function closeComments(){document.getElementById('commentModal').classList.remove('show')}
+function renderComments(comments){
+  if(!comments.length){document.getElementById('commentList').innerHTML='<div style="padding:20px;text-align:center;color:#555;font-size:13px">No comments yet — leave one below</div>';return}
+  document.getElementById('commentList').innerHTML=comments.map(c=>{
+    const isAgent=['richard','erlich','dinesh','gilfoyle','jiangyang'].includes((c.author||'').toLowerCase());
+    const color=isAgent?C[(c.author||'').toLowerCase()]||'#888':'#10b981';
+    const label=isAgent?(NAMES[(c.author||'').toLowerCase()]||c.author):c.author;
+    const ts=c.timestamp?new Date(c.timestamp).toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit',hour12:true}):'';
+    return`<div style="padding:12px 0;border-bottom:1px solid #222">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+        <span style="font-size:12px;font-weight:600;color:${color}">${esc(label)}</span>
+        <span style="font-size:10px;color:#444">${ts}</span>
+      </div>
+      <div style="font-size:13px;color:#ccc;line-height:1.5;padding-left:0">${esc(c.text)}</div>
+    </div>`}).join('');
+  // Scroll to bottom
+  const el=document.getElementById('commentList');
+  el.scrollTop=el.scrollHeight;
+}
+async function addComment(){
+  const id=document.getElementById('commentTaskId').value;
+  const input=document.getElementById('commentInput');
+  const text=input.value.trim();
+  if(!text||!id)return;
+  const r=await fetch('/api/sprints/'+id+'/comments',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text,author:'You'})});
+  const d=await r.json();
+  if(d.ok){
+    input.value='';
+    renderComments(d.comments);
+    const t=tasks.find(x=>x.id==id);
+    if(t)t.comments=d.comments;
+    renderTasks();
+  }
+}
+document.getElementById('commentModal').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();addComment()}});
+
+// Work Log
+function openLog(id){
+  const t=tasks.find(x=>x.id===id);
+  if(!t)return;
+  document.getElementById('logTaskId').value=id;
+  document.getElementById('logTitle').textContent='📝 '+t.title;
+  document.getElementById('logInput').value='';
+  renderLogEntries(t.log||[]);
+  document.getElementById('logModal').classList.add('show');
+  setTimeout(()=>document.getElementById('logInput').focus(),100);
+}
+function closeLog(){document.getElementById('logModal').classList.remove('show')}
+function renderLogEntries(log){
+  if(!log.length){document.getElementById('logEntries').innerHTML='<div style="padding:16px;text-align:center;color:#555;font-size:13px">No entries yet</div>';return}
+  document.getElementById('logEntries').innerHTML=log.map((e,i)=>`
+    <div style="display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid #222;font-size:13px">
+      <span style="color:#444;min-width:20px;text-align:right;font-size:11px;padding-top:2px">${i+1}.</span>
+      <span style="color:#ccc;line-height:1.5">${esc(e)}</span>
+    </div>`).join('');
+}
+async function addLogEntry(){
+  const id=document.getElementById('logTaskId').value;
+  const input=document.getElementById('logInput');
+  const entry=input.value.trim();
+  if(!entry||!id)return;
+  const r=await fetch('/api/sprints/'+id+'/log',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({entry})});
+  const d=await r.json();
+  if(d.ok){
+    input.value='';
+    renderLogEntries(d.log);
+    // Update local task data
+    const t=tasks.find(x=>x.id==id);
+    if(t)t.log=d.log;
+    renderTasks();
+  }
+}
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&document.getElementById('logModal').classList.contains('show'))addLogEntry()});
+
+// Drive
+let dFiles=[];
+const fi=n=>{const e=(n.split('.').pop()||'').toLowerCase();const m={pdf:'📕',doc:'📘',docx:'📘',txt:'📄',md:'📝',ppt:'📙',pptx:'📙',xls:'📗',xlsx:'📗',csv:'📗',js:'💛',py:'🐍',html:'🌐',css:'🎨',json:'📋',png:'🖼️',jpg:'🖼️',jpeg:'🖼️',gif:'🖼️',svg:'🖼️',zip:'📦',mp4:'🎬',mp3:'🎵'};return m[e]||'📄'};
+async function loadFiles(){
+  const r=await fetch('/api/files');const d=await r.json();dFiles=d.files||[];renderFiles(dFiles);
+}
+function renderFiles(f){
+  document.getElementById('dCount').textContent=f.length;
+  document.getElementById('dSize').textContent=fb(f.reduce((s,x)=>s+x.size,0));
+  document.getElementById('dLast').textContent=f.length?ago(f[0].uploaded):'—';
+  if(!f.length){document.getElementById('dBody').innerHTML='<tr><td colspan="4"><div class="empty"><div class="eicon">📂</div>No files yet</div></td></tr>';return}
+  document.getElementById('dBody').innerHTML=f.map(x=>`
+    <tr style="cursor:pointer" onclick="openViewer('${esc(x.name).replace(/'/g,"\\'")}',${x.size})">
+      <td><span class="fname">${fi(x.name)} ${esc(x.name)}</span></td>
+      <td class="fmeta">${fb(x.size)}</td>
+      <td class="fmeta">${ago(x.uploaded)}</td>
+      <td class="factions" onclick="event.stopPropagation()">
+        <a href="/api/files/${encodeURIComponent(x.name)}" class="btn btn-o" style="font-size:11px;padding:5px 12px;text-decoration:none">Download</a>
+        <button onclick="delFile('${esc(x.name)}')" class="btn btn-r" style="font-size:11px;padding:5px 12px;margin-left:4px">Delete</button>
+      </td>
+    </tr>`).join('');
+}
+function filterFiles(){const q=document.getElementById('driveQ').value.toLowerCase();renderFiles(dFiles.filter(f=>f.name.toLowerCase().includes(q)))}
+async function uploadFiles(){
+  const i=document.getElementById('driveInput');if(!i.files.length)return;
+  const fd=new FormData();for(const f of i.files)fd.append('file',f);
+  await fetch('/api/files/upload',{method:'POST',body:fd});i.value='';loadFiles();
+}
+async function delFile(n){if(!confirm('Delete '+n+'?'))return;await fetch('/api/files/'+encodeURIComponent(n),{method:'DELETE'});loadFiles()}
+
+// File Viewer
+function openViewer(name,size){
+  const ext=(name.split('.').pop()||'').toLowerCase();
+  const url='/api/files/'+encodeURIComponent(name)+'?preview=1';
+  document.getElementById('vIcon').textContent=fi(name);
+  document.getElementById('vName').textContent=name;
+  document.getElementById('vSize').textContent=fb(size);
+  document.getElementById('vDownload').href='/api/files/'+encodeURIComponent(name);
+  const c=document.getElementById('vContent');
+
+  // Images
+  if(['png','jpg','jpeg','gif','svg','webp','bmp','ico'].includes(ext)){
+    c.innerHTML=`<img src="${url}" style="max-width:100%;max-height:100%;object-fit:contain">`;
+  }
+  // PDF
+  else if(ext==='pdf'){
+    c.innerHTML=`<iframe src="${url}" style="width:100%;height:100%;border:none"></iframe>`;
+  }
+  // Video
+  else if(['mp4','webm','ogg','mov'].includes(ext)){
+    c.innerHTML=`<video controls autoplay style="max-width:100%;max-height:100%"><source src="${url}">Your browser does not support video.</video>`;
+  }
+  // Audio
+  else if(['mp3','wav','ogg','flac','aac','m4a'].includes(ext)){
+    c.innerHTML=`<div style="text-align:center;padding:40px"><div style="font-size:64px;margin-bottom:24px">🎵</div><div style="color:#fff;font-size:16px;margin-bottom:20px">${esc(name)}</div><audio controls autoplay style="width:100%;max-width:500px"><source src="${url}">Your browser does not support audio.</audio></div>`;
+  }
+  // Text / Code
+  else if(['txt','md','json','js','py','html','css','csv','xml','yml','yaml','toml','ini','cfg','conf','log','sh','bash','zsh','sql','java','cpp','c','h','go','rs','ts','tsx','jsx','rb','php','swift','kt','r','env','gitignore','dockerfile','makefile'].includes(ext)){
+    c.innerHTML='<div style="padding:24px;color:#888;font-size:13px">Loading...</div>';
+    fetch(url).then(r=>r.text()).then(text=>{
+      const lang=['json','js','py','html','css','xml','sql','java','cpp','c','go','rs','ts','tsx','jsx','rb','php','swift','sh','bash','yml','yaml'].includes(ext)?ext:'plaintext';
+      c.innerHTML=`<pre style="width:100%;height:100%;margin:0;padding:24px;overflow:auto;background:#111;color:#ccc;font-family:'SF Mono',Monaco,Consolas,monospace;font-size:13px;line-height:1.6;white-space:pre-wrap;word-break:break-word;text-align:left">${esc(text)}</pre>`;
+    });
+  }
+  // Markdown rendered
+  else if(ext==='md'){
+    c.innerHTML='<div style="padding:24px;color:#888">Loading...</div>';
+    fetch(url).then(r=>r.text()).then(text=>{
+      c.innerHTML=`<div style="width:100%;height:100%;padding:32px;overflow:auto;color:#ccc;font-size:14px;line-height:1.7;text-align:left"><pre style="white-space:pre-wrap;font-family:inherit">${esc(text)}</pre></div>`;
+    });
+  }
+  // Office docs — use Google Docs Viewer
+  else if(['doc','docx','xls','xlsx','ppt','pptx'].includes(ext)){
+    c.innerHTML=`<div style="text-align:center;padding:40px;color:#888"><div style="font-size:48px;margin-bottom:16px">${fi(name)}</div><p style="margin-bottom:16px">Office document preview requires a public URL.</p><a href="/api/files/${encodeURIComponent(name)}" class="btn btn-w" style="text-decoration:none">Download to view</a></div>`;
+  }
+  // Fallback
+  else{
+    c.innerHTML=`<div style="text-align:center;padding:40px;color:#888"><div style="font-size:48px;margin-bottom:16px">${fi(name)}</div><p style="margin-bottom:16px">Preview not available for .${esc(ext)} files</p><a href="/api/files/${encodeURIComponent(name)}" class="btn btn-w" style="text-decoration:none">Download</a></div>`;
+  }
+
+  document.getElementById('viewer').classList.add('show');
+}
+function closeViewer(){document.getElementById('viewer').classList.remove('show');document.getElementById('vContent').innerHTML=''}
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeViewer();closeModal()}})
+
+// Goals
+async function loadGoals(){
+  const r=await fetch('/api/goals');const d=await r.json();
+  const goals=d.goals||[];
+  if(!goals.length){document.getElementById('goalsList').innerHTML='<div class="empty" style="padding:40px">No goals yet — create one above</div>';return}
+  document.getElementById('goalsList').innerHTML=goals.map(g=>{
+    const pct=g.progress||0;
+    const color=pct>=100?'#10b981':pct>=50?'#38bdf8':'#a78bfa';
+    const daysLeft=g.deadline?Math.ceil((new Date(g.deadline)-Date.now())/(1000*60*60*24)):null;
+    const deadlineColor=daysLeft!==null?(daysLeft<0?'#ef4444':daysLeft<7?'#fb923c':'#555'):'#555';
+    const statusIcon=g.status==='completed'?'✅':g.status==='paused'?'⏸️':'🎯';
+    return`<div style="background:#1a1a1a;border:1px solid #222;border-radius:12px;padding:24px;margin-bottom:16px;transition:border-color .15s" onmouseover="this.style.borderColor='#333'" onmouseout="this.style.borderColor='#222'">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
+        <div>
+          <div style="font-size:16px;font-weight:700;color:#fff;margin-bottom:4px">${statusIcon} ${esc(g.title)}</div>
+          <div style="font-size:12px;color:#666">${esc(g.description||'')}</div>
+        </div>
+        <div style="display:flex;gap:6px;flex-shrink:0">
+          <button class="btn btn-o" style="font-size:11px;padding:4px 10px" onclick="editGoal(${g.id})">Edit</button>
+          <button class="btn btn-r" style="font-size:11px;padding:4px 10px" onclick="delGoal(${g.id})">Delete</button>
+        </div>
+      </div>
+      <div style="display:flex;gap:24px;align-items:center;margin-bottom:14px;font-size:12px">
+        <span style="color:${C[g.owner]||'#888'}">Owner: <strong>${NAMES[g.owner]||g.owner}</strong></span>
+        ${g.deadline?`<span style="color:${deadlineColor}">Deadline: <strong>${g.deadline}</strong>${daysLeft!==null?' ('+(daysLeft<0?Math.abs(daysLeft)+'d overdue':daysLeft+'d left')+')':''}</span>`:''}
+        <span style="color:#555">Tasks: <strong>${g.completedTasks||0}/${g.linkedTasks||0}</strong></span>
+      </div>
+      <div style="background:#222;border-radius:6px;height:10px;overflow:hidden;position:relative">
+        <div style="background:${color};height:100%;width:${pct}%;border-radius:6px;transition:width .5s"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-top:6px;font-size:11px">
+        <span style="color:#555">${pct}% complete</span>
+        <span style="color:${color};font-weight:600">${pct>=100?'🎉 Done!':pct>=50?'On track':'Getting started'}</span>
+      </div>
+    </div>`}).join('');
+}
+function openGoalModal(g){
+  document.getElementById('goalModalTitle').textContent=g?'Edit Goal':'New Goal';
+  document.getElementById('goalId').value=g?g.id:'';
+  document.getElementById('goalTitleIn').value=g?g.title:'';
+  document.getElementById('goalDescIn').value=g?g.description:'';
+  document.getElementById('goalOwnerIn').value=g?g.owner:'richard';
+  document.getElementById('goalDeadlineIn').value=g?g.deadline:'';
+  document.getElementById('goalModal').classList.add('show');
+}
+function closeGoalModal(){document.getElementById('goalModal').classList.remove('show')}
+let goalsCache=[];
+async function editGoal(id){
+  if(!goalsCache.length){const r=await fetch('/api/goals');const d=await r.json();goalsCache=d.goals||[]}
+  const g=goalsCache.find(x=>x.id===id);if(g)openGoalModal(g);
+}
+async function saveGoal(){
+  const id=document.getElementById('goalId').value;
+  const b={title:document.getElementById('goalTitleIn').value,description:document.getElementById('goalDescIn').value,owner:document.getElementById('goalOwnerIn').value,deadline:document.getElementById('goalDeadlineIn').value};
+  if(id)await fetch('/api/goals/'+id,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)});
+  else await fetch('/api/goals',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)});
+  closeGoalModal();loadGoals();
+}
+async function delGoal(id){if(!confirm('Delete this goal?'))return;await fetch('/api/goals/'+id,{method:'DELETE'});loadGoals()}
+
+// Leaderboard
+async function loadLeaderboard(){
+  const r=await fetch('/api/leaderboard');const d=await r.json();
+  const lb=d.leaderboard||[];
+  const statusColors={shipping:'#10b981',grinding:'#38bdf8',blocked:'#ef4444',idle:'#555'};
+  const statusEmoji={shipping:'🚀',grinding:'⚡',blocked:'🔴',idle:'💤'};
+  document.getElementById('lbContent').innerHTML=`
+    <div style="display:grid;gap:12px">
+      ${lb.map((a,i)=>{
+        const barMax=Math.max(...lb.map(x=>x.score),1);
+        const barPct=Math.round(a.score/barMax*100);
+        return`<div style="background:#1a1a1a;border:1px solid #222;border-radius:12px;padding:20px;display:flex;align-items:center;gap:20px;transition:border-color .15s${i===0?';border-color:#333;background:#1c1c1c':''}" onmouseover="this.style.borderColor='#444'" onmouseout="this.style.borderColor='${i===0?'#333':'#222'}'">
+          <div style="font-size:28px;width:40px;text-align:center;flex-shrink:0">${a.badge||'#'+(i+1)}</div>
+          <div style="flex:1;min-width:0">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+              <span style="font-size:16px;font-weight:700;color:${C[a.agent]||'#fff'};text-transform:capitalize">${a.agent}</span>
+              <span style="font-size:11px;padding:3px 10px;border-radius:12px;background:${statusColors[a.status]||'#333'}22;color:${statusColors[a.status]||'#888'};font-weight:600">${statusEmoji[a.status]||''} ${a.status}</span>
+              <span style="font-size:24px;font-weight:800;color:#fff;margin-left:auto">${a.score}</span>
+              <span style="font-size:10px;color:#555;text-transform:uppercase">pts</span>
+            </div>
+            <div style="background:#222;border-radius:4px;height:6px;overflow:hidden;margin-bottom:10px">
+              <div style="background:${C[a.agent]||'#38bdf8'};height:100%;width:${barPct}%;border-radius:4px;transition:width .5s"></div>
+            </div>
+            <div style="display:flex;gap:16px;font-size:11px;color:#555;flex-wrap:wrap">
+              <span>✅ <strong style="color:#10b981">${a.done}</strong> done</span>
+              <span>🔨 <strong style="color:#38bdf8">${a.inProgress}</strong> in progress</span>
+              <span>🔴 <strong style="color:#ef4444">${a.blocked}</strong> blocked</span>
+              <span>📋 <strong style="color:#888">${a.backlog}</strong> backlog</span>
+              <span>📝 <strong style="color:#a78bfa">${a.logEntries}</strong> logs</span>
+              <span>⏱️ <strong style="color:#38bdf8">${a.activeHours}h</strong> active</span>
+              <span>🧑‍💻 <strong style="color:#a78bfa">${a.humanEquivHours}h</strong> saved</span>
+            </div>
+          </div>
+        </div>`}).join('')}
+    </div>
+    <div style="margin-top:24px;background:#1a1a1a;border:1px solid #222;border-radius:12px;padding:20px">
+      <div style="font-size:12px;font-weight:600;color:#555;text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px">Scoring</div>
+      <div style="font-size:12px;color:#666;line-height:1.8">
+        ✅ Task completed = <strong style="color:#10b981">+10 pts</strong> · 
+        🔨 In progress = <strong style="color:#38bdf8">+3 pts</strong> · 
+        📝 Log entry = <strong style="color:#a78bfa">+2 pts</strong> · 
+        💬 Comment = <strong style="color:#888">+1 pt</strong> · 
+        🔴 Blocked = <strong style="color:#ef4444">-5 pts</strong>
+      </div>
+    </div>`;
 }
 
-// Close modal on overlay click
-document.getElementById('taskModal').addEventListener('click',e=>{if(e.target===e.currentTarget)closeTaskModal()});
+// Messages
+let allMsgs=[];
+async function loadMsgs(){
+  const agent=document.getElementById('msgAgent').value;
+  const role=document.getElementById('msgRole').value;
+  let url='/api/messages?limit=200';
+  if(agent)url+='&agent='+agent;
+  if(role)url+='&role='+role;
+  const r=await fetch(url);const d=await r.json();
+  allMsgs=d.messages||[];
+  renderMsgs(allMsgs);
+}
+function filterMsgs(){
+  const q=document.getElementById('msgSearch').value.toLowerCase();
+  renderMsgs(allMsgs.filter(m=>(m.content_preview||'').toLowerCase().includes(q)||(m.agent||'').includes(q)));
+}
+function renderMsgs(msgs){
+  if(!msgs.length){document.getElementById('msgList').innerHTML='<div class="empty" style="padding:40px">No messages found</div>';return}
+  document.getElementById('msgList').innerHTML=msgs.map(m=>{
+    const isUser=m.role==='user';
+    return`<div style="display:flex;gap:12px;padding:12px 20px;border-bottom:1px solid #1e1e1e;align-items:flex-start;transition:background .1s"
+      onmouseover="this.style.background='#1e1e1e'" onmouseout="this.style.background=''">
+      <div style="min-width:80px">
+        <span style="font-size:12px;font-weight:600;color:${C[m.agent]||'#888'};text-transform:capitalize">${m.agent}</span>
+      </div>
+      <div style="min-width:70px">
+        <span class="feed-badge ${m.role}" style="font-size:10px;padding:2px 8px;border-radius:4px;font-weight:600">${isUser?'IN':'OUT'}</span>
+      </div>
+      <div style="min-width:130px;font-size:11px;color:#444;font-variant-numeric:tabular-nums;padding-top:1px">
+        ${m.timestamp?new Date(m.timestamp).toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit',hour12:true}):''}
+      </div>
+      <div style="flex:1;min-width:0;font-size:12px;color:${isUser?'#888':'#ccc'};line-height:1.5;word-break:break-word">
+        ${esc(m.content_preview||'')}
+      </div>
+    </div>`}).join('');
+}
 
 refresh();
 setInterval(refresh,30000);

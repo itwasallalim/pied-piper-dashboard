@@ -1,0 +1,27 @@
+runtime: python3.12
+service_name: pied-piper-dashboard-oddy
+env: standard
+egress_all_traffic: true
+automatic_scaling:
+  min_instances: 1
+  max_instances: 1
+
+env_variables:
+  PORT: "8080"
+  DASH_USER: "alim"
+  DASH_PASS: "middleout2026"
+  FLASK_ENV: "production"
+
+handlers:
+- url: /api/.*
+  script: auto
+- url: /static/(.*)
+  static_files: static/\1
+  upload: static/.*
+- url: /.*
+  script: auto
+
+liveness_check:
+  path: "/"
+  check_interval_sec: 30
+check_timeout_sec: 4

@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pied Piper Documents - Direct File Management</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background: #1a1a1a; color: white; }
+    .container { max-width: 1200px; margin: 0 auto; }
+    .header { text-align: center; margin-bottom: 30px; }
+    .upload-box { border: 3px dashed #4ade80; padding: 30px; text-align: center; border-radius: 10px; margin-bottom: 30px; }
+    .categories { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
+    .category { background: #333; padding: 20px; border-radius: 10px; text-align: center; }
+    .file-item { background: #444; margin: 10px 0; padding: 15px; border-radius: 5px; display: flex; justify-content: space-between; align-items: center; }
+    .btn { background: #4ade80; color: black; padding: 8px 16px; border: none; border-radius: 5px; cursor: pointer; }
+    .btn:hover { background: #22c55e; }
+    .zero-state { text-align: center; padding: 40px; color: #999; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🏗️ Pied Piper Documents</h1>
+      <p>Direct file management for team work products</p>
+    </div>
+
+    <div class="upload-box">
+      <h3>📤 Upload Work Products</h3>
+      <p>Drag files here or click Browse to upload:</p>
+      <input type="file" id="file-input" multiple style="margin: 10px 0;">
+      <p><small>PDF, Excel (.xlsx), PowerPoint (.pptx), code files, images</small></p>
+    </div>
+
+    <div class="categories">
+      <div class="category">
+        <h3>📄 Documents</h3>
+        <div id="docs-count">0 files</div>
+      </div>
+      <div class="category">
+        <h3>📊 Presentations</h3>
+        <div id="presentations-count">0 files</div>
+      </div>
+      <div class="category">
+        <h3>📈 Spreadsheets</h3>
+        <div id="spreadsheets-count">0 files</div>
+      </div>
+      <div class="category">
+        <h3>💻 Code</h3>
+        <div id="code-count">0 files</div>
+      </div>
+      <div class="category">
+        <h3>🎨 Designs</h3>
+        <div id="designs-count">0 files</div>
+      </div>
+    </div>
+
+    <div id="files-container">
+      <h2>📁 Team Files</h2>
+      <div id="files-list">
+        <div class="zero-state">No files uploaded yet - start adding!</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let uploadedFiles = [];
+    const UPLOADS_DIR = 'uploads/';
+
+    document.getElementById('file-input').addEventListener('change', handleUpload);
+
+    function handleUpload(e) {
+      const files = e.target.files;
+      for (let file of files) {
+        uploadedFiles.push({
+          name: file.name,
+          size: formatBytes(file.size),
+          category: categorizeFile(file.name),
+          uploaded: new Date().toLocaleDateString()
+        });
+      }
+      displayFiles();
+      updateCategories();
+    }
+
+    function categorizeFile(filename) {
+      const ext = filename.toLowerCase().split('.').pop();
+      if (['pdf','doc','docx','txt','md'].includes(ext)) return 'documents';
+      if (['ppt','pptx','key'].includes(ext)) return 'presentations';
+      if (['xls','xlsx','csv'].includes(ext)) return 'spreadsheets';
+      if (['js','py','java','html','css','json','sql'].includes(ext)) return 'code';
+      if (['png','jpg','jpeg','gif','svg'].includes(ext)) return 'designs';
+      return 'other';
+    }
+
+    function formatBytes(bytes) {
+      if (bytes === 0) return '0 Bytes';
+      const k = 1024;
+      const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+
+    function displayFiles() {
+      const container = document.getElementById('files-list');
+      if (uploadedFiles.length === 0) {
+        container.innerHTML = '<div class="zero-state">Click "Browse Files" above to upload team documents</div>';
+        return;
+      }
+
+      let html = '';
+      uploadedFiles.forEach(file => {
+        html += `
+          <div class="file-item">
+            <div>
+              <strong>${file.name}</strong><br>
+              <small>${file.size} • ${file.category} • ${file.uploaded}</small>
+            </div>
+            <button class="btn" onclick="downloadFile('${file.name}')">📥 Download</button>
+          </div>
+        `;
+      });
+      container.innerHTML = html;
+    }
+
+    function updateCategories() {
+      const counts = { documents: 0, presentations: 0, spreadsheets: 0, code: 0, designs: 0 };
+      uploadedFiles.forEach(file => {
+        if (file.category in counts) counts[file.category]++;
+      });
+
+      Object.keys(counts).forEach(cat => {
+        document.getElementById(cat + '-count').textContent = counts[cat] + ' files';
+      });
+    }
+
+    function downloadFile(filename) {
+      alert('Download: ' + filename + ' (server-side handling ready)');
+    }
+
+    // Initialize
+    displayFiles();
+  </script>
+</body>
+</html>

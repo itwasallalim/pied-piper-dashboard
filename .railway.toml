@@ -1,0 +1,25 @@
+# Set up Railway deployment
+name: pied-piper-dashboard
+
+build:
+  builder: heroku
+  
+env:
+  FLASK_ENV: production
+  DASH_USER: alim
+  DASH_PASS: middleout2026
+  PORT: 8080
+
+healthcheck:
+  path: /api/activity
+  interval: 30s
+  timeout: 5s
+  
+deploy:
+  image: ""
+  restart_policy: always
+  ports:
+    - 8080:8080
+  
+restart:
+  unless-stopped

@@ -1,9 +1,239 @@
 [
-  {"id": 1, "title": "Implement middle-out compression v2", "description": "Refactor the core algorithm for better Weissman scores", "assignee": "richard", "status": "in-progress", "created": "2026-02-17T10:00:00Z"},
-  {"id": 2, "title": "Fix auth token rotation", "description": "Tokens are expiring too fast in production", "assignee": "gilfoyle", "status": "in-progress", "created": "2026-02-17T11:00:00Z"},
-  {"id": 3, "title": "Redesign settings page", "description": "Make it not look like it was built in 2003", "assignee": "dinesh", "status": "backlog", "created": "2026-02-16T09:00:00Z"},
-  {"id": 4, "title": "Pitch deck for Series B", "description": "Update financials and TAM slides for Raviga meeting", "assignee": "erlich", "status": "backlog", "created": "2026-02-16T14:00:00Z"},
-  {"id": 5, "title": "Deploy monitoring stack", "description": "Set up Prometheus and Grafana on the new cluster", "assignee": "gilfoyle", "status": "done", "created": "2026-02-15T08:00:00Z"},
-  {"id": 6, "title": "Add hotdog detection endpoint", "description": "Not hotdog. It's a feature.", "assignee": "jiangyang", "status": "done", "created": "2026-02-14T16:00:00Z"},
-  {"id": 7, "title": "Mobile responsive dashboard", "description": "Dashboard breaks on phones, fix grid layouts", "assignee": "dinesh", "status": "in-progress", "created": "2026-02-17T15:00:00Z"}
+  {
+    "id": 1,
+    "title": "Full dashboard UX redesign",
+    "description": "Sidebar nav, minimal dark theme, full-width layout, Inter font, sticky header",
+    "assignee": "dinesh",
+    "status": "done",
+    "created": "2026-02-19T12:18:00Z",
+    "log": [
+      "Rebuilt entire index.html with sidebar navigation",
+      "Redesigned login page to match",
+      "Multiple iterations based on Alim feedback",
+      "Went from tab bar to sidebar, removed glassmorphism"
+    ],
+    "goalId": 1
+  },
+  {
+    "id": 2,
+    "title": "Add Shared Drive with document viewer",
+    "description": "File upload/download/delete/search plus inline preview for images, PDF, video, audio, code",
+    "assignee": "dinesh",
+    "status": "done",
+    "created": "2026-02-19T12:16:00Z",
+    "log": [
+      "Added /api/files endpoints to Flask backend",
+      "Built file table with type icons and search",
+      "Added document viewer modal supporting 30+ file types",
+      "PDF iframe, image preview, video/audio players, code viewer"
+    ],
+    "goalId": 1
+  },
+  {
+    "id": 3,
+    "title": "Add Messages page",
+    "description": "Full message feed from all agents with filters by agent, role, and search",
+    "assignee": "dinesh",
+    "status": "done",
+    "created": "2026-02-19T13:30:00Z",
+    "log": [
+      "Added /api/messages endpoint",
+      "Built Messages page with agent/role dropdowns and search",
+      "Color-coded by agent, IN/OUT badges, timestamps"
+    ],
+    "goalId": 1
+  },
+  {
+    "id": 4,
+    "title": "Sprint Board \u2014 add Blocked column",
+    "description": "4-column kanban: Backlog, In Progress, Blocked, Done",
+    "assignee": "dinesh",
+    "status": "done",
+    "created": "2026-02-19T13:28:00Z",
+    "log": [
+      "Added Blocked column to HTML and JS",
+      "Updated drag-and-drop and modal to support blocked status"
+    ],
+    "goalId": 1
+  },
+  {
+    "id": 5,
+    "title": "Real actor photos on Team page",
+    "description": "Download headshots from Wikimedia Commons for all 5 cast members",
+    "assignee": "dinesh",
+    "status": "done",
+    "created": "2026-02-19T12:21:00Z",
+    "log": [
+      "Sourced photos via Wikipedia API for Thomas Middleditch, TJ Miller, Kumail Nanjiani, Martin Starr, Jimmy O Yang",
+      "Stored in static/img/, added onerror fallback to DiceBear"
+    ],
+    "goalId": 1
+  },
+  {
+    "id": 6,
+    "title": "Time savings KPIs on dashboard",
+    "description": "Agent active hours, human-equiv hours saved, estimated $ saved, ROI multiplier",
+    "assignee": "dinesh",
+    "status": "done",
+    "created": "2026-02-19T14:45:00Z",
+    "log": [
+      "Added activeHours and humanEquivHours to build_agent_stats",
+      "New metrics row with time savings and ROI",
+      "Per-agent hours in agent cards"
+    ],
+    "goalId": 1
+  },
+  {
+    "id": 7,
+    "title": "EY EAN 2026 Class Report",
+    "description": "Scraped 22 entrepreneurs from ean-directory.ey.com, built 12-page PDF report with AI impact analysis",
+    "assignee": "dinesh",
+    "status": "done",
+    "created": "2026-02-19T13:38:00Z",
+    "log": [
+      "Opened browser, navigated to EAN directory, extracted all 22 members",
+      "Built HTML report with cover, directory, sector analysis, geo distribution",
+      "Added AI impact analysis and agent team blueprint per Alim request",
+      "Generated PDF via Chrome headless, uploaded to Shared Drive"
+    ]
+  },
+  {
+    "id": 8,
+    "title": "Deploy dashboard on port 5123",
+    "description": "Flask app.py running on 192.168.50.132:5123 with auth",
+    "assignee": "dinesh",
+    "status": "done",
+    "created": "2026-02-19T12:18:00Z",
+    "log": [
+      "Killed existing processes",
+      "Installed Flask deps in venv",
+      "Started app.py on port 5123",
+      "Verified accessible at 192.168.50.132:5123"
+    ],
+    "goalId": 1
+  },
+  {
+    "id": 9,
+    "title": "Cloudflare tunnel for external access",
+    "description": "Set up persistent Cloudflare tunnel or Vercel deploy for hotdogdashboard.com",
+    "assignee": "richard",
+    "status": "blocked",
+    "created": "2026-02-18T21:48:00Z",
+    "log": [
+      "Quick tunnels rate limited by Cloudflare",
+      "Need named tunnel or alternative hosting"
+    ],
+    "comments": [
+      {
+        "author": "You",
+        "text": "what do you need to get this working",
+        "timestamp": "2026-02-19T22:09:39.752941+00:00"
+      }
+    ]
+  },
+  {
+    "id": 10,
+    "title": "Implement middle-out compression v2",
+    "description": "Refactor core algorithm for better Weissman scores",
+    "assignee": "richard",
+    "status": "in-progress",
+    "created": "2026-02-17T10:00:00Z",
+    "log": [
+      "Researching optimal block sizes for streaming compression"
+    ],
+    "goalId": 3
+  },
+  {
+    "id": 11,
+    "title": "Pitch deck for Series B",
+    "description": "Update financials and TAM slides for Raviga meeting",
+    "assignee": "erlich",
+    "status": "in-progress",
+    "created": "2026-02-16T14:00:00Z",
+    "log": [
+      "Drafted narrative arc",
+      "Working on TAM/SAM/SOM slides",
+      "Need updated revenue projections from Richard"
+    ],
+    "goalId": 2
+  },
+  {
+    "id": 12,
+    "title": "Fix auth token rotation",
+    "description": "Tokens expiring too fast in production",
+    "assignee": "gilfoyle",
+    "status": "in-progress",
+    "created": "2026-02-17T11:00:00Z",
+    "log": [
+      "Identified race condition in token refresh",
+      "Testing fix with extended TTL"
+    ],
+    "goalId": 4
+  },
+  {
+    "id": 13,
+    "title": "Deploy monitoring stack",
+    "description": "Prometheus + Grafana on the new cluster",
+    "assignee": "gilfoyle",
+    "status": "done",
+    "created": "2026-02-15T08:00:00Z",
+    "log": [
+      "Set up Prometheus with custom scrapers",
+      "Grafana dashboards for all services",
+      "Alert rules configured"
+    ],
+    "goalId": 4
+  },
+  {
+    "id": 14,
+    "title": "SeeFood API v2",
+    "description": "Hotdog detection endpoint improvements",
+    "assignee": "jiangyang",
+    "status": "done",
+    "created": "2026-02-14T16:00:00Z",
+    "log": [
+      "It detects hotdog. Also not hotdog."
+    ]
+  },
+  {
+    "id": 15,
+    "title": "Sprint board work logging",
+    "description": "Add work log feature so team members track what they did on each task",
+    "assignee": "dinesh",
+    "status": "in-progress",
+    "created": "2026-02-19T15:32:00Z",
+    "log": [
+      "Building work log UI and API"
+    ],
+    "goalId": 1
+  },
+  {
+    "id": 16,
+    "title": "Security audit \u2014 dashboard endpoints",
+    "description": "Review all API endpoints for auth bypass, injection, CSRF",
+    "assignee": "gilfoyle",
+    "status": "backlog",
+    "created": "2026-02-19T15:00:00Z",
+    "log": [],
+    "goalId": 4
+  },
+  {
+    "id": 17,
+    "title": "Investor one-pager for EAN cohort",
+    "description": "One-page summary of Pied Piper for EY EAN 2026 networking",
+    "assignee": "erlich",
+    "status": "backlog",
+    "created": "2026-02-19T14:30:00Z",
+    "log": [],
+    "goalId": 2
+  },
+  {
+    "id": 18,
+    "title": "Octopus recipe app",
+    "description": "New app idea. Very good.",
+    "assignee": "jiangyang",
+    "status": "backlog",
+    "created": "2026-02-19T15:00:00Z",
+    "log": []
+  }
 ]

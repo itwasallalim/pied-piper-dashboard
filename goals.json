@@ -1,0 +1,6 @@
+[
+  {"id": 1, "title": "Ship Dashboard v2", "description": "Complete full dashboard redesign with all pages, deploy externally", "owner": "dinesh", "deadline": "2026-02-28", "status": "active", "created": "2026-02-19T12:00:00Z"},
+  {"id": 2, "title": "Close Series B", "description": "Finalize pitch deck, nail Raviga meeting, secure funding", "owner": "erlich", "deadline": "2026-03-31", "status": "active", "created": "2026-02-19T12:00:00Z"},
+  {"id": 3, "title": "Middle-Out Compression v2", "description": "Ship next-gen compression algorithm with improved Weissman scores", "owner": "richard", "deadline": "2026-03-15", "status": "active", "created": "2026-02-17T10:00:00Z"},
+  {"id": 4, "title": "Production Security Hardening", "description": "Complete security audit, fix auth issues, deploy monitoring", "owner": "gilfoyle", "deadline": "2026-03-01", "status": "active", "created": "2026-02-19T15:00:00Z"}
+]

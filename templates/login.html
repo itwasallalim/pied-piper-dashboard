@@ -3,107 +3,46 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Pied Piper Dashboard — Login</title>
+<title>Pied Piper — Sign In</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    background: #0f1117;
-    color: #e1e4e8;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 100vh;
-  }
-  .login-card {
-    background: #161b22;
-    border: 1px solid #30363d;
-    border-radius: 12px;
-    padding: 40px;
-    width: 100%;
-    max-width: 380px;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
-  }
-  .login-card h1 {
-    font-size: 24px;
-    margin-bottom: 8px;
-    text-align: center;
-  }
-  .login-card .subtitle {
-    color: #8b949e;
-    text-align: center;
-    margin-bottom: 28px;
-    font-size: 14px;
-  }
-  .login-card label {
-    display: block;
-    font-size: 13px;
-    color: #8b949e;
-    margin-bottom: 6px;
-  }
-  .login-card input[type="text"],
-  .login-card input[type="password"] {
-    width: 100%;
-    padding: 10px 12px;
-    background: #0d1117;
-    border: 1px solid #30363d;
-    border-radius: 6px;
-    color: #e1e4e8;
-    font-size: 14px;
-    margin-bottom: 16px;
-    outline: none;
-    transition: border-color 0.2s;
-  }
-  .login-card input:focus {
-    border-color: #58a6ff;
-  }
-  .login-card button {
-    width: 100%;
-    padding: 10px;
-    background: #238636;
-    color: #fff;
-    border: none;
-    border-radius: 6px;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background 0.2s;
-  }
-  .login-card button:hover {
-    background: #2ea043;
-  }
-  .error {
-    background: #da363340;
-    border: 1px solid #da3633;
-    color: #f85149;
-    padding: 8px 12px;
-    border-radius: 6px;
-    font-size: 13px;
-    margin-bottom: 16px;
-    text-align: center;
-  }
-  .logo {
-    text-align: center;
-    font-size: 40px;
-    margin-bottom: 12px;
-  }
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',system-ui,sans-serif;background:#111;color:#fff;min-height:100vh;display:flex;align-items:center;justify-content:center}
+.card{width:100%;max-width:360px;padding:0 24px}
+.mark{font-size:14px;font-weight:600;color:#fff;margin-bottom:40px;display:flex;align-items:center;gap:10px}
+.mark span{background:#10b981;width:8px;height:8px;border-radius:50%;display:inline-block}
+h1{font-size:28px;font-weight:700;margin-bottom:8px;letter-spacing:-.03em}
+.sub{color:#666;font-size:14px;margin-bottom:36px}
+label{display:block;font-size:13px;font-weight:500;color:#999;margin-bottom:6px}
+input{
+  width:100%;padding:11px 14px;background:#1a1a1a;border:1px solid #333;border-radius:8px;
+  color:#fff;font-size:14px;font-family:inherit;margin-bottom:20px;outline:none;transition:border-color .15s;
+}
+input:focus{border-color:#10b981}
+input::placeholder{color:#444}
+button{
+  width:100%;padding:12px;background:#fff;color:#111;border:none;border-radius:8px;
+  font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;transition:opacity .15s;
+}
+button:hover{opacity:.9}
+.err{color:#ef4444;font-size:13px;margin-bottom:20px;padding:10px 14px;background:#1a1a1a;border:1px solid #333;border-radius:8px}
+.foot{text-align:center;margin-top:32px;font-size:12px;color:#444}
 </style>
 </head>
 <body>
-  <div class="login-card">
-    <div class="logo">🦞</div>
-    <h1>Pied Piper Dashboard</h1>
-    <p class="subtitle">Agent Team Monitoring</p>
-    {% if error %}
-    <div class="error">{{ error }}</div>
-    {% endif %}
-    <form method="POST">
-      <label for="username">Username</label>
-      <input type="text" id="username" name="username" autocomplete="username" required autofocus>
-      <label for="password">Password</label>
-      <input type="password" id="password" name="password" autocomplete="current-password" required>
-      <button type="submit">Sign In</button>
-    </form>
-  </div>
+<div class="card">
+  <div class="mark"><span></span>Pied Piper</div>
+  <h1>Sign in</h1>
+  <p class="sub">Access your team dashboard</p>
+  {% if error %}<div class="err">{{ error }}</div>{% endif %}
+  <form method="POST">
+    <label>Username</label>
+    <input type="text" name="username" placeholder="username" autocomplete="username" required autofocus>
+    <label>Password</label>
+    <input type="password" name="password" placeholder="••••••••" autocomplete="current-password" required>
+    <button type="submit">Continue</button>
+  </form>
+  <p class="foot">Middle-Out Compression Platform</p>
+</div>
 </body>
 </html>

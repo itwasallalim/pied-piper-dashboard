@@ -1,0 +1,4 @@
+  File "/Users/anton/.openclaw/workspace-piedpiper/dashboard/app.py", line 126
+    return f"🔧 {block.get('name', 'tool')}(…"")
+                                             ^
+SyntaxError: unterminated string literal (detected at line 126)
