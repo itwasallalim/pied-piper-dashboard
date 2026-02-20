@@ -585,7 +585,7 @@ def api_repos():
     """Fetch GitHub repos for the org via gh CLI."""
     try:
         result = subprocess.run(
-            ["gh", "repo", "list", "itwasallalim", "--json",
+            ["gh", "repo", "list", "itwasallalim", "--public", "--json",
              "name,description,url,updatedAt,primaryLanguage,isPrivate,stargazerCount,forkCount",
              "--limit", "50"],
             capture_output=True, text=True, timeout=15
