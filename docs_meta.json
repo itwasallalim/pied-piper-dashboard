@@ -45,5 +45,88 @@
     "audience": "all",
     "created": "2026-02-20T00:32:42.027043+00:00",
     "updated": "2026-02-20T00:32:42.027055+00:00"
+  },
+  {
+    "id": 4,
+    "title": "How to Create Presentations with Gamma API",
+    "category": "tutorial",
+    "content": "# Creating Presentations with Gamma API\n\nWhen Alim (or anyone) asks for a presentation, pitch deck, or slides \u2014 use the Gamma API to generate it automatically. Every presentation gets exported as both PDF and PPTX and saved to the Shared Drive.\n\n## Quick Reference\n\n- **API Endpoint:** POST https://public-api.gamma.app/v1.0/generations\n- **API Key Header:** X-API-KEY: sk-gamma-TCuD24fbRyWQmJZpax7QNOqXZg60GbT6FohziTIl4w\n- **Check Status:** GET https://public-api.gamma.app/v1.0/generations/{generationId}\n\n## Step-by-Step Process\n\n### 1. Generate the Presentation\n\nMake a POST request with your content. Use `\\n---\\n` between sections to control slide breaks.\n\nRequired fields:\n- `inputText` \u2014 your content (text + optional image URLs)\n- `textMode` \u2014 `generate` (AI expands), `condense` (AI summarizes), or `preserve` (keeps exact text)\n\nOptional but recommended:\n- `format` \u2014 `presentation` (default for decks)\n- `numCards` \u2014 number of slides (1-60)\n- `cardSplit` \u2014 `auto` or `inputTextBreaks`\n- `exportAs` \u2014 `pdf` or `pptx` (do BOTH, one at a time)\n- `textOptions.amount` \u2014 `brief`, `medium`, `detailed`, `extensive`\n- `textOptions.tone` \u2014 e.g. `professional, compelling`\n- `textOptions.audience` \u2014 e.g. `venture capital investors`\n- `imageOptions.source` \u2014 `aiGenerated` or `noImages`\n\n### 2. Poll for Completion\n\nThe POST returns a `generationId`. Wait 30-60 seconds then GET the status endpoint. When `status` is `completed`, you get `gammaUrl` (live link) and `exportUrl` (download).\n\n### 3. Download and Save to Shared Drive\n\nDownload the file from `exportUrl` and save to `/Users/anton/.openclaw/workspace-piedpiper/dashboard/uploads/`\n\n### 4. ALWAYS Generate Both Formats\n\nRun the generation TWICE \u2014 once with `exportAs: pdf` and once with `exportAs: pptx`. Save both to the Shared Drive.\n\n## Example: Investor Pitch Deck\n\nWhen someone says *build me an investor pitch deck*:\n\n1. Write content with slide breaks (use `\\n---\\n`):\n   - Slide 1: Company name + tagline\n   - Slide 2: The Problem\n   - Slide 3: Our Solution\n   - Slide 4: Market Opportunity (TAM/SAM/SOM)\n   - Slide 5: Traction (users, revenue, growth)\n   - Slide 6: Business Model\n   - Slide 7: Team\n   - Slide 8: The Ask (raise amount + use of funds)\n\n2. Set `tone` to `professional, compelling` and `audience` to `venture capital investors`\n3. Generate with `exportAs: pptx`, poll until done, download\n4. Generate again with `exportAs: pdf`, poll until done, download\n5. Save both files to Shared Drive\n6. Share the Gamma live URL + confirm files are saved\n\n## Key Parameters Table\n\n- `textMode`: generate | condense | preserve\n- `format`: presentation | document | social | webpage\n- `numCards`: 1-60 (number of slides)\n- `cardSplit`: auto | inputTextBreaks\n- `exportAs`: pdf | pptx (ALWAYS do both)\n- `textOptions.amount`: brief | medium | detailed | extensive\n- `textOptions.tone`: any string (e.g. professional, fun, inspiring)\n- `textOptions.audience`: any string (e.g. investors, engineers)\n- `imageOptions.source`: aiGenerated | noImages\n\n## Rules (MANDATORY)\n\n1. **ALWAYS export both PDF and PPTX**\n2. **ALWAYS save to Shared Drive** (dashboard/uploads/)\n3. **ALWAYS share the Gamma live URL** with the user\n4. Check `credits.remaining` in the response\n5. Download links expire \u2014 save files IMMEDIATELY after generation completes\n6. If content is long, use `inputTextBreaks` with `\\n---\\n` for precise slide control\n7. For short prompts, use `textMode: generate` so Gamma expands the content",
+    "author": "dinesh",
+    "tags": [
+      "gamma",
+      "presentations",
+      "api",
+      "pptx",
+      "pdf"
+    ],
+    "audience": "ai",
+    "created": "2026-02-20T00:57:02.437099+00:00",
+    "updated": "2026-02-20T00:57:02.437108+00:00"
+  },
+  {
+    "id": 5,
+    "title": "Not Hotdog \u2014 Architecture & Setup",
+    "category": "architecture",
+    "content": "# Not Hotdog App\n\nJian-Yang's SeeFood application. Is it a hotdog? Or not a hotdog.\n\n## Stack\n- **Backend**: Flask (Python 3), port 5125\n- **Frontend**: Vanilla HTML/CSS/JS, themed appropriately\n- **AI Vision**: Anthropic Claude API\n\n## Location\n- **Code**: /Users/anton/.openclaw/workspace-piedpiper/nothotdog/\n- **URL**: http://192.168.50.132:5125\n- **GitHub**: https://github.com/itwasallalim/not-hotdog\n\n## API\n- `POST /analyze` \u2014 takes a base64 encoded image, returns JSON: `{\"isHotdog\": true/false, \"confidence\": 0.0-1.0, \"description\": \"...\"}`\n\n## Running\n```bash\ncd /Users/anton/.openclaw/workspace-piedpiper/nothotdog\nANTHROPIC_API_KEY=sk-... python3 app.py\n```\n\nIt is a very good app.",
+    "author": "jianyang",
+    "tags": [
+      "not-hotdog",
+      "seefood",
+      "ai",
+      "vision",
+      "flask"
+    ],
+    "audience": "all",
+    "created": "2026-02-20T14:56:39.092195+00:00",
+    "updated": "2026-02-20T14:56:39.092206+00:00"
+  },
+  {
+    "id": 6,
+    "title": "Pied Piper Compression \u2014 Architecture & Setup",
+    "category": "architecture",
+    "content": "# Pied Piper Compression Platform\n\nThe MVP of the core Pied Piper product. Demonstrates middle-out compression.\n\n## Stack\n- **Backend**: Flask (Python 3), port 5126\n- **Frontend**: Vanilla HTML/CSS/JS with a custom dark theme\n- **Compression**: A hybrid middle-out algorithm using zlib, gzip, bz2, and lzma.\n## Location\n- **Code**: /Users/anton/.openclaw/workspace-piedpiper/piedpiper-app/\n- **URL**: http://192.168.50.132:5126\n- **GitHub**: https://github.com/itwasallalim/pied-piper-compression\n\n## Algorithm\nThe `middle_out_compress` function splits the input file at its midpoint. It then compresses each half with multiple standard algorithms (zlib, gzip, bz2, lzma) and determines the best algorithm for *each half independently*. It can result in a hybrid compression (e.g., zlib on the first half, bz2 on the second) if that provides the best ratio. It then packages the compressed data with a JSON header containing the necessary metadata for decompression.\n## Weissman Score\nCalculated using the formula: `W = (compression_ratio / baseline_ratio) * (log(baseline_time) / log(time))`\n## API\n- `POST /api/compress` \u2014 Upload a file, returns JSON with stats and a link to the `.pp` file.\n- `POST /api/decompress` \u2014 Upload a `.pp` file, returns the decompressed original file.\n- `GET /api/history` \u2014 Returns JSON of all previous compressions.",
+    "author": "richard",
+    "tags": [
+      "pied-piper",
+      "compression",
+      "middle-out",
+      "weissman",
+      "flask"
+    ],
+    "audience": "all",
+    "created": "2026-02-20T14:56:39.110051+00:00",
+    "updated": "2026-02-20T14:56:39.110060+00:00"
+  },
+  {
+    "id": 7,
+    "title": "How to Make AI Phone Calls with Bland AI",
+    "category": "tutorial",
+    "content": "# Making Calls with Bland AI\n\nWhen asked to call Alim or anyone, use the Bland AI API. It's integrated and ready.\n\n## Quick Reference\n- **Endpoint**: `POST https://api.bland.ai/v1/calls`\n- **API Key**: `org_419b9749b05752e65da678f9242004777c3f9be7eddbc747f2c7246b7a83f01c5bd65e73120f8fe6b96269`\n- **To Number**: `+19175870806` (Alim's number)\n- **From Number (Caller ID)**: `+16506778340` (Pied Piper Team Number)\n- **Voice**: `Josh` (male)\n## The 'Wrong Number' Bug FIX\nBland AI has a bug where it can get confused and say \"sorry, wrong number\" if the task prompt is too complex. To prevent this:\n1. Use a **very short, simple `task`** prompt. (e.g., \"Ask Alim what he needs.\")\n2. Use a direct, clear **`first_sentence`**. (e.g., \"Hey Alim, it is Dinesh calling.\")\nThis combination fixes the bug.\n\n## Example Call\n\n```bash\ncurl -X POST https://api.bland.ai/v1/calls \\\n  -H \"authorization: org_...\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n    \"phone_number\": \"+19175870806\",\n    \"from\": \"+16506778340\",\n    \"first_sentence\": \"Hey Alim, it is Dinesh. Testing the phone calls.\",\n    \"task\": \"Ask him if he can hear you clearly.\",\n    \"voice\": \"Josh\"\n  }'\n```",
+    "author": "dinesh",
+    "tags": [
+      "bland",
+      "phone",
+      "api",
+      "calls"
+    ],
+    "audience": "ai",
+    "created": "2026-02-20T14:56:39.122061+00:00",
+    "updated": "2026-02-20T14:56:39.122067+00:00"
+  },
+  {
+    "id": 8,
+    "title": "Dashboard \u2014 Code Page",
+    "category": "tutorial",
+    "content": "# Code Page Guide\n\nThe Code page provides a centralized view of all Pied Piper related GitHub repositories.\n## Features\n\n- **Repo List**: Shows all repos specified in `/dashboard/projects.json` from the `itwasallalim` GitHub org.\n- **Language Filtering**: Filter repos by their primary language.\n- **Search**: Fuzzy search by repo name and description.\n- **Commit Viewer**: Click any repo to see its 10 most recent commits in a modal.\n- **GitHub Link**: Direct link to the repo on github.com.\n\n## How it Works\nThe page uses the `/api/repos` endpoint, which calls the `gh` (GitHub CLI) command on the server to fetch the latest repo data. This ensures the data is always live.\n\n## Adding a Project\nTo add a new repo to the page, simply add its name to the `projects.json` file in the dashboard's root directory and it will appear automatically.",
+    "author": "dinesh",
+    "tags": [
+      "dashboard",
+      "code",
+      "github",
+      "repos"
+    ],
+    "audience": "all",
+    "created": "2026-02-20T14:56:39.131728+00:00",
+    "updated": "2026-02-20T14:56:39.131733+00:00"
   }
 ]

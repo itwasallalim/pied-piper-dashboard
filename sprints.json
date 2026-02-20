@@ -259,5 +259,37 @@
     "assignee": "dinesh",
     "status": "done",
     "created": "2026-02-20T00:32:26.929285+00:00"
+  },
+  {
+    "id": 22,
+    "title": "Not Hotdog App",
+    "description": "Jian-Yangs vision, brought to life. AI-powered hotdog detection on port 5125.",
+    "assignee": "jianyang",
+    "status": "done",
+    "created": "2026-02-20T14:56:17.140281+00:00"
+  },
+  {
+    "id": 23,
+    "title": "Pied Piper Compression App",
+    "description": "The core product MVP. Middle-out compression demo with Weissman score, on port 5126.",
+    "assignee": "richard",
+    "status": "done",
+    "created": "2026-02-20T14:56:17.152929+00:00"
+  },
+  {
+    "id": 24,
+    "title": "Gamma API Integration",
+    "description": "Integrated Gamma.app for presentation generation. All decks auto-export to PDF+PPTX and save to Shared Drive.",
+    "assignee": "dinesh",
+    "status": "done",
+    "created": "2026-02-20T14:56:17.162520+00:00"
+  },
+  {
+    "id": 25,
+    "title": "Code Page in Dashboard",
+    "description": "Added a new page to view all GitHub repos for the team.",
+    "assignee": "dinesh",
+    "status": "done",
+    "created": "2026-02-20T14:56:17.171083+00:00"
   }
 ]
