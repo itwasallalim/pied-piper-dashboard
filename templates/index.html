@@ -197,6 +197,7 @@ a{color:#10b981;text-decoration:none}
       <div class="nav-item" onclick="go('leaderboard')"><span class="icon">🏆</span>Leaderboard</div>
       <div class="nav-item" onclick="go('messages')"><span class="icon">💬</span>Messages</div>
       <div class="nav-item" onclick="go('drive')"><span class="icon">📁</span>Shared Drive</div>
+      <div class="nav-item" onclick="go('code')"><span class="icon">💻</span>Code</div>
       <div class="nav-item" onclick="go('docs')"><span class="icon">📖</span>Docs</div>
     </div>
     <div class="sidebar-footer"><a href="/logout">Sign out</a></div>
@@ -289,6 +290,35 @@ a{color:#10b981;text-decoration:none}
           <input id="msgSearch" placeholder="Search messages..." oninput="filterMsgs()" style="flex:1;max-width:300px;padding:9px 14px;background:#1a1a1a;border:1px solid #222;border-radius:8px;color:#eee;font-size:13px;font-family:inherit;outline:none">
         </div>
         <div id="msgList" class="feed" style="max-height:calc(100vh - 220px);overflow-y:auto"></div>
+      </div>
+
+      <!-- Code -->
+      <div id="sec-code" class="page-section">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+          <div style="display:flex;gap:12px;align-items:center;flex:1">
+            <input id="codeSearch" placeholder="Search repos..." oninput="filterRepos()" style="flex:1;max-width:300px;padding:9px 14px;background:#1a1a1a;border:1px solid #222;border-radius:8px;color:#eee;font-size:13px;font-family:inherit;outline:none">
+            <select id="codeLang" onchange="filterRepos()" style="padding:9px 14px;background:#1a1a1a;border:1px solid #222;border-radius:8px;color:#eee;font-size:13px;font-family:inherit;outline:none">
+              <option value="">All Languages</option>
+            </select>
+          </div>
+        </div>
+        <div class="drive-metrics">
+          <div class="metric"><div class="label">Repositories</div><div class="val" id="repoCount">0</div></div>
+          <div class="metric"><div class="label">Languages</div><div class="val" id="repoLangs">0</div></div>
+          <div class="metric"><div class="label">Last Push</div><div class="val" id="repoLastPush" style="font-size:16px">—</div></div>
+        </div>
+        <div id="repoGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:12px"></div>
+      </div>
+
+      <!-- Commit Viewer Modal -->
+      <div class="overlay" id="commitModal" onclick="if(event.target===this)closeCommits()">
+        <div class="modal" style="width:640px;max-height:85vh;overflow-y:auto">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+            <h3 id="commitTitle" style="margin:0">Recent Commits</h3>
+            <button class="btn btn-o" onclick="closeCommits()" style="font-size:12px;padding:6px 14px">✕</button>
+          </div>
+          <div id="commitList"></div>
+        </div>
       </div>
 
       <!-- Docs -->
@@ -534,7 +564,7 @@ const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 const sd=ts=>ts?new Date(ts).toLocaleDateString('en-US',{month:'short',day:'numeric'}):'';
 const fb=b=>{if(!b)return'0 B';const u=['B','KB','MB','GB'];const i=Math.floor(Math.log(b)/Math.log(1024));return(b/Math.pow(1024,i)).toFixed(i?1:0)+' '+u[i]};
 
-const TITLES={dashboard:'Dashboard',team:'Team',sprint:'Sprint Board',goals:'Goals & Milestones',leaderboard:'Agent Leaderboard',messages:'Messages',drive:'Shared Drive',docs:'Docs'};
+const TITLES={dashboard:'Dashboard',team:'Team',sprint:'Sprint Board',goals:'Goals & Milestones',leaderboard:'Agent Leaderboard',messages:'Messages',code:'Code',drive:'Shared Drive',docs:'Docs'};
 function go(p){
   document.querySelectorAll('.page-section').forEach(e=>e.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(e=>e.classList.remove('active'));
@@ -546,6 +576,7 @@ function go(p){
   if(p==='leaderboard')loadLeaderboard();
   if(p==='messages')loadMsgs();
   if(p==='drive')loadFiles();
+  if(p==='code')loadRepos();
   if(p==='docs')loadDocs();
 }
 
@@ -1015,6 +1046,99 @@ function renderMsgs(msgs){
       </div>
     </div>`}).join('');
 }
+
+// Code / Repos
+let allRepos=[];
+const langColors={'TypeScript':'#3178c6','JavaScript':'#f1e05a','Python':'#3572a5','HTML':'#e34c26','CSS':'#563d7c','Shell':'#89e051','Java':'#b07219','Vue':'#41b883','Jupyter Notebook':'#DA5B0B','Go':'#00ADD8','Rust':'#dea584','Ruby':'#701516'};
+
+async function loadRepos(){
+  try{
+    const r=await fetch('/api/repos');const d=await r.json();allRepos=d.repos||[];
+    // Populate language filter
+    const langs=new Set(allRepos.map(r=>(r.primaryLanguage||{}).name).filter(Boolean));
+    const sel=document.getElementById('codeLang');
+    const current=sel.value;
+    sel.innerHTML='<option value="">All Languages</option>'+[...langs].sort().map(l=>`<option value="${l}">${l}</option>`).join('');
+    sel.value=current;
+    filterRepos();
+  }catch(e){console.error(e)}
+}
+function filterRepos(){
+  const q=(document.getElementById('codeSearch').value||'').toLowerCase();
+  const lang=document.getElementById('codeLang').value;
+  let f=allRepos;
+  if(q)f=f.filter(r=>r.name.toLowerCase().includes(q)||(r.description||'').toLowerCase().includes(q));
+  if(lang)f=f.filter(r=>(r.primaryLanguage||{}).name===lang);
+  renderRepos(f);
+}
+function renderRepos(repos){
+  const langs=new Set(allRepos.map(r=>(r.primaryLanguage||{}).name).filter(Boolean));
+  document.getElementById('repoCount').textContent=allRepos.length;
+  document.getElementById('repoLangs').textContent=langs.size;
+  const latest=allRepos.length?allRepos.reduce((a,b)=>a.updatedAt>b.updatedAt?a:b).updatedAt:null;
+  document.getElementById('repoLastPush').textContent=latest?ago(latest):'—';
+
+  if(!repos.length){document.getElementById('repoGrid').innerHTML='<div class="empty" style="padding:48px;grid-column:1/-1"><div class="eicon">💻</div>No repos found</div>';return}
+
+  document.getElementById('repoGrid').innerHTML=repos.map(r=>{
+    const lang=(r.primaryLanguage||{}).name||'';
+    const lc=langColors[lang]||'#888';
+    const isActive=r.updatedAt&&(Date.now()-new Date(r.updatedAt))<7*24*60*60*1000;
+    return`<div style="background:#1a1a1a;border:1px solid #222;border-radius:12px;padding:20px;transition:border-color .15s;cursor:pointer" onmouseover="this.style.borderColor='#333'" onmouseout="this.style.borderColor='#222'" onclick="viewCommits('${esc(r.name)}')">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
+        <div style="min-width:0">
+          <div style="font-size:15px;font-weight:600;color:#fff;display:flex;align-items:center;gap:8px">
+            <span style="color:#888">📦</span>${esc(r.name)}
+            ${r.isPrivate?'<span style="font-size:9px;padding:2px 6px;border-radius:4px;background:#332200;color:#f59e0b;font-weight:600">PRIVATE</span>':''}
+            ${isActive?'<span style="width:6px;height:6px;border-radius:50%;background:#10b981;flex-shrink:0" title="Active this week"></span>':''}
+          </div>
+          ${r.description?`<div style="font-size:12px;color:#666;margin-top:4px;line-height:1.5">${esc(r.description)}</div>`:''}
+        </div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;color:#444;margin-top:12px">
+        <div style="display:flex;gap:12px;align-items:center">
+          ${lang?`<span style="display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:50%;background:${lc}"></span><span style="color:#888">${lang}</span></span>`:''}
+          ${r.stargazerCount?`<span>⭐ ${r.stargazerCount}</span>`:''}
+          ${r.forkCount?`<span>🍴 ${r.forkCount}</span>`:''}
+        </div>
+        <span>Updated ${ago(r.updatedAt)}</span>
+      </div>
+      <div style="display:flex;gap:6px;margin-top:12px" onclick="event.stopPropagation()">
+        <a href="${r.url}" target="_blank" class="btn btn-o" style="font-size:11px;padding:5px 12px;text-decoration:none">GitHub ↗</a>
+        <button class="btn btn-o" style="font-size:11px;padding:5px 12px" onclick="viewCommits('${esc(r.name)}')">Commits</button>
+      </div>
+    </div>`}).join('');
+}
+
+async function viewCommits(name){
+  document.getElementById('commitTitle').textContent='📝 '+name+' — Recent Commits';
+  document.getElementById('commitList').innerHTML='<div style="padding:20px;text-align:center;color:#555">Loading commits...</div>';
+  document.getElementById('commitModal').classList.add('show');
+  try{
+    const r=await fetch('/api/repos/'+encodeURIComponent(name)+'/commits');
+    const d=await r.json();
+    const commits=d.commits||[];
+    if(!commits.length){
+      document.getElementById('commitList').innerHTML='<div style="padding:20px;text-align:center;color:#555">No commits found</div>';
+      return;
+    }
+    document.getElementById('commitList').innerHTML=commits.map(c=>`
+      <div style="padding:12px 0;border-bottom:1px solid #222">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
+          <div style="min-width:0;flex:1">
+            <div style="font-size:13px;color:#fff;font-weight:500;line-height:1.5;word-break:break-word">${esc((c.message||'').split('\\n')[0])}</div>
+            <div style="font-size:11px;color:#555;margin-top:4px">
+              <span style="color:#888">${esc(c.author||'')}</span> · ${c.date?ago(c.date):''}
+            </div>
+          </div>
+          <code style="font-size:11px;background:#222;padding:3px 8px;border-radius:4px;color:#10b981;white-space:nowrap">${c.sha||''}</code>
+        </div>
+      </div>`).join('');
+  }catch(e){
+    document.getElementById('commitList').innerHTML='<div style="padding:20px;text-align:center;color:#ef4444">Error loading commits</div>';
+  }
+}
+function closeCommits(){document.getElementById('commitModal').classList.remove('show')}
 
 // Docs
 let allDocs=[];

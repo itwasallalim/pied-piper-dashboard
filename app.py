@@ -577,6 +577,51 @@ def api_docs_delete(doc_id):
     return jsonify({"ok": True})
 
 
+import subprocess
+
+@app.route("/api/repos", methods=["GET"])
+@login_required
+def api_repos():
+    """Fetch GitHub repos for the org via gh CLI."""
+    try:
+        result = subprocess.run(
+            ["gh", "repo", "list", "itwasallalim", "--json",
+             "name,description,url,updatedAt,primaryLanguage,isPrivate,stargazerCount,forkCount",
+             "--limit", "50"],
+            capture_output=True, text=True, timeout=15
+        )
+        if result.returncode == 0:
+            repos = json.loads(result.stdout)
+            return jsonify({"repos": repos})
+    except Exception as e:
+        return jsonify({"repos": [], "error": str(e)})
+    return jsonify({"repos": []})
+
+
+@app.route("/api/repos/<name>/commits", methods=["GET"])
+@login_required
+def api_repo_commits(name):
+    """Fetch recent commits for a repo."""
+    try:
+        result = subprocess.run(
+            ["gh", "api", f"repos/itwasallalim/{name}/commits",
+             "--jq", ".[0:10] | .[] | {sha: .sha[0:7], message: .commit.message, author: .commit.author.name, date: .commit.author.date}"],
+            capture_output=True, text=True, timeout=15
+        )
+        if result.returncode == 0:
+            commits = []
+            for line in result.stdout.strip().split("\n"):
+                if line.strip():
+                    try:
+                        commits.append(json.loads(line))
+                    except:
+                        pass
+            return jsonify({"commits": commits})
+    except Exception as e:
+        return jsonify({"commits": [], "error": str(e)})
+    return jsonify({"commits": []})
+
+
 UPLOAD_DIR = os.path.join(os.path.dirname(__file__), "uploads")
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
