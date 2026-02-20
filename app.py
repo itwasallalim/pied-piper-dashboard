@@ -579,10 +579,20 @@ def api_docs_delete(doc_id):
 
 import subprocess
 
+PROJECTS_FILE = os.path.join(os.path.dirname(__file__), "projects.json")
+
+
+def _load_projects():
+    if not os.path.exists(PROJECTS_FILE):
+        return []
+    with open(PROJECTS_FILE, "r") as f:
+        return json.load(f)
+
+
 @app.route("/api/repos", methods=["GET"])
 @login_required
 def api_repos():
-    """Fetch GitHub repos for the org via gh CLI."""
+    """Fetch GitHub repos for the org via gh CLI, filtered to Pied Piper projects."""
     try:
         result = subprocess.run(
             ["gh", "repo", "list", "itwasallalim", "--public", "--json",
@@ -592,6 +602,9 @@ def api_repos():
         )
         if result.returncode == 0:
             repos = json.loads(result.stdout)
+            pp_projects = _load_projects()
+            if pp_projects:
+                repos = [r for r in repos if r["name"] in pp_projects]
             return jsonify({"repos": repos})
     except Exception as e:
         return jsonify({"repos": [], "error": str(e)})
