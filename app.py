@@ -86,7 +86,7 @@ def build_agent_stats(agent_name):
     total_cache_read = sum(m["usage"].get("cacheRead", 0) or 0 for m in assistant_msgs)
     total_cache_write = sum(m["usage"].get("cacheWrite", 0) or 0 for m in assistant_msgs)
     total_tokens = sum(m["usage"].get("totalTokens", 0) or 0 for m in assistant_msgs)
-    total_cost = sum((m["usage"].get("cost") or {}).get("total", 0) or 0 for m in assistant_msgs)
+    total_cost = sum(max((m["usage"].get("cost") or {}).get("total", 0) or 0, 0) for m in assistant_msgs)
 
     models = set(m.get("model") for m in assistant_msgs if m.get("model"))
     timestamps = [m["timestamp"] for m in messages if m.get("timestamp")]
