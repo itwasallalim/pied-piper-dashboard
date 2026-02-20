@@ -235,5 +235,29 @@
     "status": "backlog",
     "created": "2026-02-19T15:00:00Z",
     "log": []
+  },
+  {
+    "id": 19,
+    "title": "AI Photo Hair Analysis",
+    "description": "Users can upload/snap a photo of their hair and get AI-powered classification (type, porosity, density) via Claude Vision API. Integrated into HairID app.",
+    "assignee": "dinesh",
+    "status": "done",
+    "created": "2026-02-20T00:32:26.901056+00:00"
+  },
+  {
+    "id": 20,
+    "title": "HairID MVP \u2014 Quiz + Recommendations",
+    "description": "8-step quiz flow with personalized HairID profile, product recommendations, ingredient guides, and custom routines.",
+    "assignee": "dinesh",
+    "status": "done",
+    "created": "2026-02-20T00:32:26.917608+00:00"
+  },
+  {
+    "id": 21,
+    "title": "Docs Page \u2014 Team Knowledge Base",
+    "description": "Added \ud83d\udcd6 Docs page to dashboard with CRUD, categories, audience targeting, tags, markdown viewer. Seeded with onboarding + tutorial docs.",
+    "assignee": "dinesh",
+    "status": "done",
+    "created": "2026-02-20T00:32:26.929285+00:00"
   }
 ]

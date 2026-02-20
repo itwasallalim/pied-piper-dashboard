@@ -28,5 +28,22 @@
     "audience": "all",
     "created": "2026-02-19T23:59:03.500279+00:00",
     "updated": "2026-02-19T23:59:03.500289+00:00"
+  },
+  {
+    "id": 3,
+    "title": "HairID App \u2014 Architecture & Setup",
+    "category": "architecture",
+    "content": "# HairID\u2122 App\n\nAI-powered hair analysis app inspired by MYAVANA.\n\n## Stack\n- **Backend**: Flask (Python 3), port 5124\n- **Frontend**: Vanilla HTML/CSS/JS, dark theme with purple/pink gradient branding\n- **AI Vision**: Anthropic Claude API for photo-based hair classification\n- **Data**: JSON file storage (profiles.json)\n\n## Location\n- **Code**: /Users/anton/.openclaw/workspace-piedpiper/myavana/\n- **URL**: http://192.168.50.132:5124\n\n## Features\n\n### Quiz Flow (8 steps)\n1. Name\n2. Hair type (1-4: Straight/Wavy/Curly/Coily)\n3. Subtype (A/B/C: Fine/Medium/Coarse)\n4. Porosity (Low/Medium/High \u2014 float test)\n5. Density (Fine/Medium/Thick)\n6. Scalp condition (Oily/Normal/Dry/Sensitive)\n7. Concerns (multi-select)\n8. Goals (multi-select)\n\n### Photo Analysis\n- Upload or snap a photo from landing page\n- Sends to `/analyze-photo` endpoint\n- Uses Claude Vision API to classify hair type, porosity, density\n- Returns confidence level and observations\n- Pre-fills quiz answers, skips to concerns/goals\n- Requires `ANTHROPIC_API_KEY` env var for AI analysis\n\n### Results \u2014 HairID Profile\n- Type classification card\n- Product recommendations (shampoo, conditioner, styling, treatments)\n- Ingredient guide (good vs avoid)\n- Custom step-by-step routine with wash frequency\n- Porosity-specific tips\n\n## API Endpoints\n- `GET /` \u2014 Landing page + quiz + results\n- `POST /analyze` \u2014 Submit quiz answers, get profile\n- `POST /analyze-photo` \u2014 Upload photo for AI analysis\n- `GET /api/profiles` \u2014 List all saved profiles\n- `GET /api/profiles/<id>` \u2014 Get specific profile\n\n## Running\n```bash\ncd /Users/anton/.openclaw/workspace-piedpiper/myavana\nANTHROPIC_API_KEY=sk-... python3 app.py\n```\n\n## Next Steps\n- User accounts / login\n- Salon finder integration\n- E-commerce product links\n- Before/after photo tracking\n- Mobile app wrapper",
+    "author": "dinesh",
+    "tags": [
+      "hairid",
+      "myavana",
+      "ai",
+      "photo-analysis",
+      "flask"
+    ],
+    "audience": "all",
+    "created": "2026-02-20T00:32:42.027043+00:00",
+    "updated": "2026-02-20T00:32:42.027055+00:00"
   }
 ]
